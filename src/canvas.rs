@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::color::{self, Color};
+use crate::color::Color;
 
 #[derive(Debug, Clone)]
 pub struct Canvas {
@@ -72,8 +72,11 @@ impl Canvas {
 
 #[cfg(test)]
 mod test {
+    use std::f64::consts::PI;
+
     use crate::{
         color::Color,
+        matrix::Mat4,
         tuple::{point, vector},
     };
 
@@ -107,5 +110,23 @@ mod test {
             canvas.write_pixel_f(current.x, 550.0 - current.y, Color::new(1.0, 0.0, 0.0));
         }
         canvas.save_ppm("curves.ppm");
+    }
+
+    #[test]
+    fn test_clock() {
+        let center = point(0.0, 0.0, 0.0);
+        let twelve = point(0.0, 0.0, 1.0);
+        let mut canvas = Canvas::new(100, 100);
+
+        for i in 0..12 {
+            let t = Mat4::identity().rot_y(PI / 6.0 * i as f64);
+
+            let ptw = t * (twelve);
+            let scaling = 30.0;
+            let ptw =
+                ptw * scaling + point((canvas.width / 2) as f64, 0.0, (canvas.height / 2) as f64);
+            canvas.write_pixel_f(ptw.x, ptw.z, Color::new(1.0, 1.0, 0.0));
+        }
+        canvas.save_ppm("clock.ppm");
     }
 }

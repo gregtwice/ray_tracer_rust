@@ -131,10 +131,36 @@ mod tests {
 
     #[test]
     fn a_shearing_transformation_moves_x_in_proportion_to_y() {
-        let transform = shearing(1, 0, 0.0, 0, 0, 0);
+        let transform = shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let p = point(2.0, 3.0, 4.0);
+        assert_eq!(transform * p, point(5.0, 3.0, 4.0));
+    }
 
-        let p = point(2, 3, 4);
+    #[test]
+    fn individual_transformations_are_applied_in_sequence() {
+        let p = point(1.0, 0.0, 1.0);
+        let A = rot_x(PI / 2.0);
+        let B = scaling(5.0, 5.0, 5.0);
+        let C = translation(10.0, 5.0, 7.0);
 
-        assert_eq!(transform * p, point(5, 3, 4));
+        let p2 = A * p;
+        assert_eq!(p2, point(1.0, -1.0, 0.0));
+
+        let p3 = B * p2;
+        assert_eq!(p3, point(5.0, -5.0, 0.0));
+        let p4 = C * p3;
+        assert_eq!(p4, point(15.0, 0.0, 7.0));
+    }
+
+    #[test]
+    fn chained_transformations_must_be_applied_in_reverse_order() {
+        let p = point(1.0, 0.0, 1.0);
+
+        let t = Mat4::identity()
+            .rot_x(PI / 2.0)
+            .scaling(5.0, 5.0, 5.0)
+            .translation(10.0, 5.0, 7.0);
+
+        assert_eq!(t * p, point(15.0, 0.0, 7.0));
     }
 }

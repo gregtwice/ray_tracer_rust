@@ -1,10 +1,14 @@
 use std::{
-    fmt::{format, Display},
+    fmt::Display,
     ops::{Index, IndexMut, Mul},
     usize,
 };
 
-use crate::{tuple::Tuple, util::flt_eq};
+use crate::{
+    transformations::{rot_x, rot_y, rot_z, scaling, shearing, translation},
+    tuple::Tuple,
+    util::flt_eq,
+};
 
 pub type Mat4 = Matrix<4>;
 pub type Mat3 = Matrix<3>;
@@ -59,7 +63,7 @@ impl Matrix<3> {
         Self::new([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
     }
 
-    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<{ 2 }> {
+    pub fn submatrix(&self, row: usize, col: usize) -> Matrix<2> {
         let mut v = Vec::with_capacity(4);
         for r in 0..3 {
             for c in 0..3 {
@@ -68,7 +72,7 @@ impl Matrix<3> {
                 }
             }
         }
-        Matrix::<{ 2 }>::new(v.try_into().unwrap())
+        Matrix::<2>::new(v.try_into().unwrap())
     }
 }
 
@@ -136,6 +140,27 @@ impl Matrix<4> {
     }
     fn as_array(&self) -> [f64; 16] {
         unsafe { std::mem::transmute(self.data) }
+    }
+
+    pub fn translation(self, x: f64, y: f64, z: f64) -> Self {
+        translation(x, y, z) * self
+    }
+    pub fn scaling(self, x: f64, y: f64, z: f64) -> Self {
+        scaling(x, y, z) * self
+    }
+
+    pub fn rot_x(self, angle: f64) -> Self {
+        rot_x(angle) * self
+    }
+    pub fn rot_y(self, angle: f64) -> Self {
+        rot_y(angle) * self
+    }
+    pub fn rot_z(self, angle: f64) -> Self {
+        rot_z(angle) * self
+    }
+
+    pub fn shearing(self, xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Self {
+        shearing(xy, xz, yx, yz, zx, zy) * self
     }
 }
 
@@ -233,7 +258,7 @@ impl Display for Mat4 {
                     longest[i * 4 + j]
                 )?;
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
         Ok(())
     }
