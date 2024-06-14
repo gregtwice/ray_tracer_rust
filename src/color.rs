@@ -23,6 +23,10 @@ impl Color {
     pub fn b(&self) -> f64 {
         self.0.z
     }
+
+    pub fn black() -> Color {
+        Self::new(0.0, 0.0, 0.0)
+    }
 }
 
 impl Add for Color {

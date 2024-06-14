@@ -36,6 +36,12 @@ impl Tuple {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
+    pub fn reflect(&self, normal: &Self) -> Self {
+        assert_eq!(self.w, 0.0);
+        assert_eq!(normal.w, 0.0);
+        *self - *normal * 2.0 * self.dot(*normal)
+    }
+
     pub fn cross(&self, rhs: Self) -> Self {
         assert!(self.w == 0.0);
         assert!(rhs.w == 0.0);
@@ -119,4 +125,24 @@ pub fn point(x: f64, y: f64, z: f64) -> Tuple {
 
 pub fn vector(x: f64, y: f64, z: f64) -> Tuple {
     Tuple::new(x, y, z, 0.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::f64::consts::SQRT_2;
+
+    use super::*;
+    #[test]
+    fn reflect_vector_45() {
+        let v = vector(1.0, -1.0, 0.0);
+        let n = vector(0.0, 1.0, 0.0);
+        assert_eq!(v.reflect(&n), vector(1.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn reflect_vector_slanted() {
+        let v = vector(0.0, -1.0, 0.0);
+        let n = vector(SQRT_2 / 2.0, SQRT_2 / 2.0, 0.0);
+        assert_eq!(v.reflect(&n), vector(1.0, 0.0, 0.0));
+    }
 }

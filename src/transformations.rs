@@ -139,8 +139,11 @@ mod tests {
     #[test]
     fn individual_transformations_are_applied_in_sequence() {
         let p = point(1.0, 0.0, 1.0);
+        #[allow(non_snake_case)]
         let A = rot_x(PI / 2.0);
+        #[allow(non_snake_case)]
         let B = scaling(5.0, 5.0, 5.0);
+        #[allow(non_snake_case)]
         let C = translation(10.0, 5.0, 7.0);
 
         let p2 = A * p;

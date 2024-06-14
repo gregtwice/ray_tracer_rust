@@ -76,7 +76,12 @@ mod test {
 
     use crate::{
         color::Color,
+        intersection::Intersectable,
+        lights::Light,
+        material::Material,
         matrix::Mat4,
+        ray::Ray,
+        sphere::Sphere,
         tuple::{point, vector},
     };
 
@@ -127,6 +132,52 @@ mod test {
                 ptw * scaling + point((canvas.width / 2) as f64, 0.0, (canvas.height / 2) as f64);
             canvas.write_pixel_f(ptw.x, ptw.z, Color::new(1.0, 1.0, 0.0));
         }
+        canvas.write_pixel_f(
+            center.x + (canvas.width / 2) as f64,
+            center.z + (canvas.height / 2) as f64,
+            Color::new(1.0, 1.0, 0.0),
+        );
         canvas.save_ppm("clock.ppm");
+    }
+
+    #[test]
+    fn test_raycast_sphere() {
+        let nb_pixels = 500f64;
+        let mut canvas = Canvas::new(nb_pixels as usize, nb_pixels as usize);
+        let ray_origin = point(0.0, 0.0, -5.0);
+        let wall_size = 7f64;
+        let wall_z = 10.0;
+        let pixel_size = wall_size / nb_pixels;
+        let mut s = Sphere::new();
+        s.set_material(Material::default());
+        s.material().color = Color::new(1.0, 0.2, 1.0);
+        let light_position = point(-10.0, 10.0, -10.0);
+        let light_color = Color::new(1.0, 1.0, 1.0);
+        let light = Light::new(light_position, light_color);
+        // let red = Color::new(1.0, 0.0, 0.0);
+        // s.set_transform(Mat4::identity().shearing(1.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+        for x in 0..canvas.width {
+            let world_x = -wall_size / 2.0 + pixel_size * x as f64;
+            for y in 0..canvas.height {
+                let world_y = wall_size / 2.0 - pixel_size * y as f64;
+                let target_position = point(world_x, world_y, wall_z);
+
+                let r = Ray::new(ray_origin, (target_position - ray_origin).norm());
+                match s.intersects(r).hit() {
+                    Some(h) => {
+                        let p = r.position(h.time);
+                        let normal = h.object.normal_at(&p);
+                        let eye = -r.direction;
+                        canvas.write_pixel(
+                            x,
+                            y,
+                            h.object.material().lighting(light, p, eye, normal),
+                        );
+                    }
+                    None => canvas.write_pixel(x, y, Color::black()),
+                }
+            }
+        }
+        canvas.save_ppm("ray_sphere.ppm");
     }
 }
