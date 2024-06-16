@@ -2,7 +2,7 @@ use std::vec;
 
 use crate::{
     color::Color,
-    intersection::{self, Intersectable, Intersections},
+    intersection::{self, Computations, Intersectable, Intersections},
     lights::Light,
     object::Object,
     sphere::Sphere,
@@ -31,6 +31,15 @@ impl World {
             objects: vec![Object::Sphere(s1), Object::Sphere(s2)],
         }
     }
+
+    pub fn shade_hit(&self, comps: Computations) -> Color {
+        comps
+            .i
+            .object
+            .material()
+            .lighting(self.lights[0], comps.point, comps.eye_v, comps.normal_v)
+    }
+
     pub fn intersects(&self, r: crate::ray::Ray) -> intersection::Intersections {
         let mut i = self
             .objects
@@ -45,6 +54,8 @@ impl World {
 
 #[cfg(test)]
 mod tests {
+    use intersection::Intersection;
+
     use crate::{ray::Ray, tuple::vector};
 
     use super::*;
@@ -65,5 +76,21 @@ mod tests {
         let w = World::ch7_default();
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
         let s = w.objects[0];
+        let i = Intersection::new(4.0, s);
+        let comps = i.prepare_computations(r);
+        let c = w.shade_hit(comps);
+        assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855))
+    }
+
+    #[test]
+    fn shading_intersection_inside() {
+        let mut w = World::ch7_default();
+        w.lights = vec![Light::new(point(0.0, 0.25, 0.0), Color::new(1.0, 1.0, 1.0))];
+        let r = Ray::new(point(0.0, 0.0, 0.0), vector(0.0, 0.0, 1.0));
+        let s = w.objects[1];
+        let i = Intersection::new(0.5, s);
+        let comps = i.prepare_computations(r);
+        let c = w.shade_hit(comps);
+        assert_eq!(c, Color::new(0.90498, 0.90498, 0.90498))
     }
 }

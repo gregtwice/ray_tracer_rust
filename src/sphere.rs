@@ -4,6 +4,7 @@ use crate::{
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,
     matrix::{Mat4, MatBase},
+    object::Object,
     ray::Ray,
     tuple::{point, Tuple},
 };
@@ -26,8 +27,14 @@ impl Intersectable for Sphere {
             Intersections::new_none()
         } else {
             Intersections::new(vec![
-                Intersection::new((-b - discriminant.sqrt()) / (2.0 * a), &self),
-                Intersection::new((-b + discriminant.sqrt()) / (2.0 * a), &self),
+                Intersection::new(
+                    (-b - discriminant.sqrt()) / (2.0 * a),
+                    Object::Sphere(*self),
+                ),
+                Intersection::new(
+                    (-b + discriminant.sqrt()) / (2.0 * a),
+                    Object::Sphere(*self),
+                ),
             ])
         }
     }
