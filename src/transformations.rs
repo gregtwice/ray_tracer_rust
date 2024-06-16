@@ -1,4 +1,4 @@
-use crate::matrix::Mat4;
+use crate::{matrix::Mat4, tuple::Tuple};
 
 pub fn translation(x: f64, y: f64, z: f64) -> Mat4 {
     let mut m = Mat4::identity();
@@ -54,6 +54,25 @@ pub fn shearing(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Mat4 {
     m[(2, 1)] = zy;
 
     m
+}
+
+/// from : position of the eye,
+/// to : point where the eye pointing
+/// up:  Which direction is up
+pub fn view_transform(from: Tuple, to: Tuple, up: Tuple) -> Mat4 {
+    assert!(from.w == 1.0);
+    assert!(to.w == 1.0);
+    assert!(up.w == 0.0);
+
+    let forward = (to - from).norm();
+    let upn = up.norm();
+    let left = forward.cross(upn);
+    let true_up = left.cross(forward);
+    let orientation = Mat4::new([
+        left.x, left.y, left.z, 0.0, true_up.x, true_up.y, true_up.z, 0.0, -forward.x, -forward.y,
+        -forward.z, 0.0, 0.0, 0.0, 0.0, 1.0,
+    ]);
+    orientation * translation(-from.x, -from.y, -from.z)
 }
 
 #[cfg(test)]
@@ -165,5 +184,47 @@ mod tests {
             .translation(10.0, 5.0, 7.0);
 
         assert_eq!(t * p, point(15.0, 0.0, 7.0));
+    }
+
+    #[test]
+    fn the_transformation_matrix_for_default_orientation() {
+        let from = point(0.0, 0.0, 0.0);
+        let to = point(0.0, 0.0, -1.0);
+        let up = vector(0.0, 1.0, 0.0);
+        let t = view_transform(from, to, up);
+        assert_eq!(t, Mat4::identity())
+    }
+
+    #[test]
+    fn the_transformation_matrix_for_looking_positive_z() {
+        let from = point(0.0, 0.0, 0.0);
+        let to = point(0.0, 0.0, 1.0);
+        let up = vector(0.0, 1.0, 0.0);
+        let t = view_transform(from, to, up);
+        assert_eq!(t, scaling(-1.0, 1.0, -1.0))
+    }
+
+    #[test]
+    fn the_transformation_matrix_moves_the_world() {
+        let from = point(0.0, 0.0, 8.0);
+        let to = point(0.0, 0.0, 0.0);
+        let up = vector(0.0, 1.0, 0.0);
+        let t = view_transform(from, to, up);
+        assert_eq!(t, translation(0.0, 0.0, -8.0))
+    }
+
+    #[test]
+    fn arbitrary_view_transformation() {
+        let from = point(1.0, 3.0, 2.0);
+        let to = point(4.0, -2.0, 8.0);
+        let up = vector(1.0, 1.0, 0.0);
+        let t = view_transform(from, to, up);
+        assert_eq!(
+            t,
+            Mat4::new([
+                -0.50709, 0.50709, 0.67612, -2.36643, 0.76772, 0.60609, 0.12122, -2.82843,
+                -0.35857, 0.59761, -0.71714, 0.00000, 0.00000, 0.00000, 0.00000, 1.00000
+            ])
+        )
     }
 }
