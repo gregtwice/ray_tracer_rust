@@ -43,6 +43,8 @@ pub trait Intersectable: Debug + PartialEq + Sized {
     fn normal_at(&self, point: &Tuple) -> Tuple;
 
     fn material(&self) -> Material;
+
+    fn material_mut(&mut self) -> &mut Material;
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]

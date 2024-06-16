@@ -1,3 +1,4 @@
+use core::hash;
 use std::vec;
 
 use crate::{
@@ -50,6 +51,15 @@ impl World {
         i.sort_by(|a, b| a.time.total_cmp(&b.time));
         Intersections::new(i)
     }
+
+    pub fn color_at(&self, r: crate::ray::Ray) -> Color {
+        let xs = self.intersects(r);
+        let hit = xs.hit();
+        match hit {
+            Some(h) => self.shade_hit(h.prepare_computations(r)),
+            None => Color::black(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -92,5 +102,31 @@ mod tests {
         let comps = i.prepare_computations(r);
         let c = w.shade_hit(comps);
         assert_eq!(c, Color::new(0.90498, 0.90498, 0.90498))
+    }
+
+    #[test]
+    fn ray_misses() {
+        let w = World::ch7_default();
+        let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 1.0, 0.0));
+        let c = w.color_at(r);
+        assert_eq!(c, Color::black())
+    }
+
+    #[test]
+    fn ray_hits() {
+        let w = World::ch7_default();
+        let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
+        let c = w.color_at(r);
+        assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855))
+    }
+
+    #[test]
+    fn color_with_intersection_behind_the_ray() {
+        let mut w = World::ch7_default();
+        w.objects[0].material_mut().ambiant = 1.0;
+        w.objects[1].material_mut().ambiant = 1.0;
+        let r = Ray::new(point(0.0, 0.0, 0.75), vector(0.0, 0.0, -1.0));
+        let c = w.color_at(r);
+        assert_eq!(c, w.objects[1].material().color);
     }
 }

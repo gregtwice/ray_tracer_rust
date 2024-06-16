@@ -50,6 +50,10 @@ impl Intersectable for Sphere {
     fn material(&self) -> Material {
         self.material
     }
+
+    fn material_mut(&mut self) -> &mut Material {
+        &mut self.material
+    }
 }
 
 impl Sphere {

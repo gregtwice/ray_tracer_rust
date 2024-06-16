@@ -23,4 +23,10 @@ impl Intersectable for Object {
             Object::Sphere(s) => s.material(),
         }
     }
+
+    fn material_mut(&mut self) -> &mut crate::material::Material {
+        match self {
+            Object::Sphere(s) => s.material_mut(),
+        }
+    }
 }
