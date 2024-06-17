@@ -6,6 +6,8 @@ use crate::{
     world::World,
 };
 
+use rayon::prelude::*;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Camera {
     hsize: usize,
@@ -63,15 +65,20 @@ impl Camera {
     }
 
     pub fn render(&self, world: World) -> Canvas {
-        let mut image = Canvas::new(self.hsize, self.vsize);
-        for y in 0..self.vsize {
-            for x in 0..self.hsize {
-                let r = self.ray_for_pixel(x, y);
-                let color = world.color_at(r);
-                image.write_pixel(x, y, color);
-            }
-        }
-        image
+        let colors = (0..self.vsize)
+            .into_par_iter()
+            .map(|y| {
+                // reserve a vec that can hold the row
+                let mut row = Vec::with_capacity(self.hsize);
+                for x in 0..self.hsize {
+                    let r = self.ray_for_pixel(x, y);
+                    row.push(world.color_at(r))
+                }
+                row
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+        Canvas::new_with_colors(self.hsize, self.vsize, colors)
     }
 }
 

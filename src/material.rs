@@ -1,10 +1,4 @@
-use crate::{
-    color::Color,
-    lights::Light,
-    object::{self, Shape},
-    pattern::Pattern,
-    tuple::Tuple,
-};
+use crate::{color::Color, lights::Light, object::Shape, pattern::Pattern, tuple::Tuple};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Material {
@@ -41,7 +35,7 @@ impl Material {
     ) -> Color {
         // combine light and material color
         let effective_color = match self.pattern {
-            Some(p) => p.color_at_shape(shape, point),
+            Some(p) => p.pattern_at_shape(shape, point),
             None => self.color,
         } * light.intensity;
         // find direction to the light source

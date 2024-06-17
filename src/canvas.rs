@@ -6,7 +6,7 @@ use crate::color::Color;
 pub struct Canvas {
     width: usize,
     height: usize,
-    pixels: Vec<Color>,
+    pub pixels: Vec<Color>,
 }
 
 impl Canvas {
@@ -15,6 +15,14 @@ impl Canvas {
             width,
             height,
             pixels: vec![Color::default(); width * height],
+        }
+    }
+
+    pub fn new_with_colors(width: usize, height: usize, colors: Vec<Color>) -> Self {
+        Self {
+            width,
+            height,
+            pixels: colors,
         }
     }
 
@@ -27,6 +35,11 @@ impl Canvas {
         assert!(y < self.height);
         let coords = self.to_xy(x, y);
         self.pixels[coords] = color
+    }
+
+    pub fn write_full_row_unchecked(&mut self, row: usize, data: &[Color]) {
+        assert!(row < self.height);
+        self.pixels.copy_from_slice(data);
     }
 
     pub fn write_pixel_f(&mut self, x: f64, y: f64, color: Color) {

@@ -8,6 +8,9 @@ use crate::{
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PatternType {
     Stripe { a: Color, b: Color },
+    Gradient { a: Color, b: Color },
+    Ring { a: Color, b: Color },
+    Checker { a: Color, b: Color },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -24,14 +27,39 @@ impl Pattern {
             transform: Mat4::identity(),
         }
     }
+    pub fn gradient(a: Color, b: Color) -> Self {
+        use PatternType::*;
+        Self {
+            p_type: Gradient { a, b },
+            transform: Mat4::identity(),
+        }
+    }
+
+    pub fn checker(a: Color, b: Color) -> Self {
+        use PatternType::*;
+        Self {
+            p_type: Checker { a, b },
+            transform: Mat4::identity(),
+        }
+    }
+    pub fn ring(a: Color, b: Color) -> Self {
+        use PatternType::*;
+        Self {
+            p_type: Ring { a, b },
+            transform: Mat4::identity(),
+        }
+    }
 
     pub fn colors(&self) -> Vec<Color> {
         match self.p_type {
             PatternType::Stripe { a, b } => vec![a, b],
+            PatternType::Gradient { a, b } => vec![a, b],
+            PatternType::Ring { a, b } => vec![a, b],
+            PatternType::Checker { a, b } => vec![a, b],
         }
     }
 
-    pub fn color_at_shape(&self, shape: Shape, world_point: Tuple) -> Color {
+    pub fn pattern_at_shape(&self, shape: Shape, world_point: Tuple) -> Color {
         let object_point = shape.transform.inverse() * world_point;
         let pattern_point = self.transform.inverse() * object_point;
         self.color_at(pattern_point)
@@ -41,6 +69,25 @@ impl Pattern {
         match self.p_type {
             PatternType::Stripe { a, b } => {
                 if p.x.floor() % 2.0 == 0.0 {
+                    a
+                } else {
+                    b
+                }
+            }
+            PatternType::Gradient { a, b } => {
+                let distance = b - a;
+                let fraction = p.x - p.x.floor();
+                a + distance * fraction
+            }
+            PatternType::Ring { a, b } => {
+                if f64::sqrt(p.x * p.x + p.z * p.z).floor() % 2.0 == 0.0 {
+                    a
+                } else {
+                    b
+                }
+            }
+            PatternType::Checker { a, b } => {
+                if (p.x.abs() + p.y.abs() + p.z.abs()) % 2.0 == 0.0 {
                     a
                 } else {
                     b
@@ -105,14 +152,14 @@ mod tests {
     fn stripes_with_an_object_transformation() {
         let s = Shape::sphere().with_transform(scaling(2.0, 2.0, 2.0));
         let pattern = Pattern::stripped(WHITE, BLACK);
-        assert_eq!(pattern.color_at_shape(s, point(1.5, 0.0, 0.0)), WHITE)
+        assert_eq!(pattern.pattern_at_shape(s, point(1.5, 0.0, 0.0)), WHITE)
     }
 
     #[test]
     fn stripes_with_a_pattern_transformation() {
         let s = Shape::sphere();
         let pattern = Pattern::stripped(WHITE, BLACK).with_transform(scaling(2.0, 2.0, 2.0));
-        assert_eq!(pattern.color_at_shape(s, point(1.5, 0.0, 0.0)), WHITE)
+        assert_eq!(pattern.pattern_at_shape(s, point(1.5, 0.0, 0.0)), WHITE)
     }
 
     #[test]
@@ -120,6 +167,53 @@ mod tests {
         let s = Shape::sphere().with_transform(scaling(2.0, 2.0, 2.0));
         let pattern = Pattern::stripped(WHITE, BLACK).with_transform(translation(0.5, 0.0, 0.0));
 
-        assert_eq!(pattern.color_at_shape(s, point(2.5, 0.0, 0.0)), WHITE)
+        assert_eq!(pattern.pattern_at_shape(s, point(2.5, 0.0, 0.0)), WHITE)
+    }
+
+    #[test]
+    fn a_gradient_linearly_interpolates_between_colors() {
+        let p = Pattern::gradient(WHITE, BLACK);
+        assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(
+            p.color_at(point(0.25, 0.0, 0.0)),
+            Color::new(0.75, 0.75, 0.75)
+        );
+        assert_eq!(p.color_at(point(0.5, 0.0, 0.0)), Color::new(0.5, 0.5, 0.5));
+        assert_eq!(
+            p.color_at(point(0.75, 0.0, 0.0)),
+            Color::new(0.25, 0.25, 0.25)
+        );
+    }
+
+    #[test]
+    fn a_ring_should_extend_in_both_x_and_z() {
+        let p = Pattern::ring(WHITE, BLACK);
+        assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(p.color_at(point(1.0, 0.0, 0.0)), BLACK);
+        assert_eq!(p.color_at(point(0.0, 0.0, 1.0)), BLACK);
+    }
+
+    #[test]
+    fn checkers_should_repeat_in_x() {
+        let p = Pattern::checker(WHITE, BLACK);
+        assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(p.color_at(point(0.99, 0.0, 0.0)), WHITE);
+        assert_eq!(p.color_at(point(1.01, 0.0, 1.0)), BLACK);
+    }
+
+    #[test]
+    fn checkers_should_repeat_in_y() {
+        let p = Pattern::ring(WHITE, BLACK);
+        assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(p.color_at(point(0.0, 0.99, 0.0)), WHITE);
+        assert_eq!(p.color_at(point(0.0, 1.01, 1.0)), BLACK);
+    }
+
+    #[test]
+    fn checkers_should_repeat_in_z() {
+        let p = Pattern::ring(WHITE, BLACK);
+        assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
+        assert_eq!(p.color_at(point(0.0, 0.0, 0.99)), WHITE);
+        assert_eq!(p.color_at(point(0.0, 0.0, 1.01)), BLACK);
     }
 }
