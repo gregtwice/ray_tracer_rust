@@ -40,9 +40,6 @@ impl Matrix<2> {
             data: [[data[0], data[1]], [data[2], data[3]]],
         }
     }
-    const fn indentity() -> Matrix<2> {
-        Self::new([1.0, 0.0, 0.0, 1.0])
-    }
 
     pub fn det(&self) -> f64 {
         self.data[0][0] * self.data[1][1] - self.data[1][0] * self.data[0][1]
@@ -58,9 +55,6 @@ impl Matrix<3> {
                 [data[6], data[7], data[8]],
             ],
         }
-    }
-    const fn indentity() -> Matrix<3> {
-        Self::new([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
     }
 
     pub fn submatrix(&self, row: usize, col: usize) -> Matrix<2> {
@@ -296,17 +290,17 @@ mod test {
     }
     #[test]
     fn test_mul() {
-        let A = Matrix::<4>::new([
+        let a = Matrix::<4>::new([
             1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0,
         ]);
-        let B = Matrix::<4>::new([
+        let b = Matrix::<4>::new([
             -2.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, -1.0, 4.0, 3.0, 6.0, 5.0, 1.0, 2.0, 7.0, 8.0,
         ]);
-        let C = Matrix::<4>::new([
+        let c = Matrix::<4>::new([
             20.0, 22.0, 50.0, 48.0, 44.0, 54.0, 114.0, 108.0, 40.0, 58.0, 110.0, 102.0, 16.0, 26.0,
             46.0, 42.0,
         ]);
-        assert_eq!(A * B, C);
+        assert_eq!(a * b, c);
     }
 
     #[test]
@@ -330,13 +324,13 @@ mod test {
     fn test_transpose() {
         assert_eq!(Matrix::<4>::identity(), Matrix::<4>::identity().transpose());
 
-        let A = Matrix::<4>::new([
+        let a = Matrix::<4>::new([
             0.0, 9.0, 3.0, 0.0, 9.0, 8.0, 0.0, 8.0, 1.0, 8.0, 5.0, 3.0, 0.0, 0.0, 5.0, 8.0,
         ]);
-        let tA = Matrix::<4>::new([
+        let t_a = Matrix::<4>::new([
             0.0, 9.0, 1.0, 0.0, 9.0, 8.0, 8.0, 0.0, 3.0, 0.0, 5.0, 5.0, 0.0, 8.0, 3.0, 8.0,
         ]);
-        assert_eq!(A.transpose(), tA);
+        assert_eq!(a.transpose(), t_a);
     }
 
     #[test]

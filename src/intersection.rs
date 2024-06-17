@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::{material::Material, object::Object, ray::Ray, sphere::Sphere, tuple::Tuple};
+use crate::{material::Material, object::Object, ray::Ray, tuple::Tuple};
 
 pub struct Intersections(Vec<Intersection>);
 

@@ -1,9 +1,9 @@
 use crate::{
-    canvas::{self, Canvas},
+    canvas::Canvas,
     matrix::{Mat4, MatBase},
     ray::Ray,
     tuple::point,
-    world::{self, World},
+    world::World,
 };
 
 #[derive(Debug, Clone, Copy)]

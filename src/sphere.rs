@@ -1,5 +1,3 @@
-use std::default;
-
 use crate::{
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,

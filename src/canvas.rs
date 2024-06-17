@@ -171,7 +171,7 @@ mod test {
                         canvas.write_pixel(
                             x,
                             y,
-                            h.object.material().lighting(light, p, eye, normal),
+                            h.object.material().lighting(light, p, eye, normal, false),
                         );
                     }
                     None => canvas.write_pixel(x, y, Color::black()),
