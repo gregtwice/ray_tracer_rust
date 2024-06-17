@@ -4,6 +4,7 @@ use crate::{
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,
     matrix::{Mat4, MatBase},
+    plane::Plane,
     ray::Ray,
     sphere::Sphere,
     tuple::{vector, Tuple},
@@ -17,6 +18,7 @@ pub trait LocalIntersect: Debug + PartialEq {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Object {
     Sphere(Sphere),
+    Plane(Plane),
     No(TestShape),
 }
 
@@ -33,6 +35,14 @@ impl Shape {
             transform: Mat4::identity(),
             material: Material::default(),
             object: Object::Sphere(Sphere),
+        }
+    }
+
+    pub fn plane() -> Self {
+        Self {
+            transform: Mat4::identity(),
+            material: Material::default(),
+            object: Object::Plane(Plane),
         }
     }
 
@@ -69,6 +79,7 @@ impl Intersectable for Shape {
         let xs = match self.object {
             Object::Sphere(s) => s.local_intersect(r),
             Object::No(_) => unimplemented!(),
+            Object::Plane(p) => p.local_intersect(r),
         };
 
         Intersections::new(xs.iter().map(|t| Intersection::new(*t, *self)).collect())
@@ -79,6 +90,7 @@ impl Intersectable for Shape {
         let local_normal = match self.object {
             Object::Sphere(s) => s.local_normal_at(&local_point),
             Object::No(ts) => ts.local_normal_at(&local_point),
+            Object::Plane(p) => p.local_normal_at(&local_point),
         };
         let mut world_normal = Mat4::transpose(self.transform.inverse()) * local_normal;
         world_normal.w = 0.0;
