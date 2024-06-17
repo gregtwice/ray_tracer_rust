@@ -1,12 +1,13 @@
 use std::fmt::Debug;
 
-use crate::{material::Material, object::Object, ray::Ray, tuple::Tuple};
+use crate::{material::Material, object::Object, ray::Ray, tuple::Tuple, util::EPSILON};
 
 pub struct Intersections(Vec<Intersection>);
 
 pub struct Computations {
     pub i: Intersection,
     pub point: Tuple,
+    pub over_point: Tuple,
     pub inside: bool,
     pub eye_v: Tuple,
     pub normal_v: Tuple,
@@ -75,6 +76,7 @@ impl Intersection {
             inside,
             eye_v,
             normal_v,
+            over_point: p + normal_v * EPSILON,
         }
     }
 }
@@ -87,7 +89,9 @@ mod tests {
         object::Object,
         ray::Ray,
         sphere::Sphere,
+        transformations::translation,
         tuple::{point, vector},
+        util::EPSILON,
     };
 
     use super::{Intersectable, Intersection};
@@ -181,5 +185,16 @@ mod tests {
         assert_eq!(comps.eye_v, vector(0.0, 0.0, -1.0));
         assert_eq!(comps.normal_v, vector(0.0, 0.0, -1.0));
         assert_eq!(comps.inside, true);
+    }
+
+    #[test]
+    fn hit_should_offset_the_point() {
+        let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
+        let mut s = Sphere::new();
+        s.set_transform(translation(0.0, 0.0, 1.0));
+        let i = Intersection::new(5.0, Object::Sphere(s));
+        let comps = i.prepare_computations(r);
+        assert!(comps.over_point.z < -EPSILON / 2.0);
+        assert!(comps.point.z > comps.over_point.z);
     }
 }
