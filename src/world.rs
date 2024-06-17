@@ -17,6 +17,12 @@ pub struct World {
 }
 
 impl World {
+    pub fn new() -> Self {
+        Self {
+            lights: vec![],
+            objects: vec![],
+        }
+    }
     pub fn ch7_default() -> Self {
         let light_position = point(-10.0, 10.0, -10.0);
         let light_color = Color::new(1.0, 1.0, 1.0);
@@ -39,7 +45,7 @@ impl World {
             comps.point,
             comps.eye_v,
             comps.normal_v,
-            false,
+            self.is_shadowed(comps.point),
         )
     }
 
@@ -82,7 +88,7 @@ impl World {
 mod tests {
     use intersection::Intersection;
 
-    use crate::{ray::Ray, tuple::vector};
+    use crate::{ray::Ray, transformations::translation, tuple::vector};
 
     use super::*;
     #[test]
@@ -172,5 +178,24 @@ mod tests {
         let w = World::ch7_default();
         let p = point(-2.0, 2.0, -2.0);
         assert_eq!(w.is_shadowed(p), false);
+    }
+
+    #[test]
+    fn shade_hit_given_intersection_in_shadow() {
+        let mut w = World::new();
+
+        w.lights.push(Light::new(
+            point(0.0, 0.0, -10.0),
+            Color::new(1.0, 1.0, 1.0),
+        ));
+        w.objects.push(Object::Sphere(Sphere::new()));
+        let mut s2 = Sphere::new();
+        s2.set_transform(translation(0.0, 0.0, 10.0));
+        w.objects.push(Object::Sphere(s2));
+        let r = Ray::new(point(0.0, 0.0, 5.0), vector(0.0, 0.0, 1.0));
+        let i = Intersection::new(4.0, Object::Sphere(s2));
+        let comps = i.prepare_computations(r);
+        let c = w.shade_hit(comps);
+        assert_eq!(c, Color::new(0.1, 0.1, 0.1));
     }
 }
