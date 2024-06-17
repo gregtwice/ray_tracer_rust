@@ -2,12 +2,9 @@ use std::f64::consts::{FRAC_PI_2, PI};
 
 use ray_tracer::{
     camera::Camera,
-    canvas::Canvas,
     color::Color,
-    intersection::Intersectable,
-    object::{Object, Shape},
-    sphere::Sphere,
-    transformations::{rot_x, scaling, translation, view_transform},
+    object::Shape,
+    transformations::{scaling, translation, view_transform},
     tuple::{point, vector},
     world::World,
 };

@@ -4,9 +4,8 @@ use crate::{
     color::Color,
     intersection::{self, Computations, Intersectable, Intersections},
     lights::Light,
-    object::{Object, Shape},
+    object::Shape,
     ray::Ray,
-    sphere::Sphere,
     transformations::scaling,
     tuple::{point, Tuple},
 };

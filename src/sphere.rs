@@ -1,8 +1,5 @@
 use crate::{
-    intersection::{Intersectable, Intersection, Intersections},
-    material::Material,
-    matrix::Mat4,
-    object::{LocalIntersect, Object},
+    object::LocalIntersect,
     ray::Ray,
     tuple::{point, Tuple},
 };
@@ -109,7 +106,7 @@ mod tests {
     #[test]
     fn changing_a_spheres_transform() {
         let transform = Mat4::identity().translation(2.0, 3.0, 4.0);
-        let mut s = Shape::sphere().with_transform(transform);
+        let s = Shape::sphere().with_transform(transform);
 
         assert_eq!(s.transform, transform);
     }
@@ -117,7 +114,7 @@ mod tests {
     #[test]
     fn intersecting_a_scaled_sphere_with_a_ray() {
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
-        let mut s = Shape::sphere().with_transform(scaling(2.0, 2.0, 2.0));
+        let s = Shape::sphere().with_transform(scaling(2.0, 2.0, 2.0));
         let xs = s.intersects(r);
         assert_eq!(xs.data().len(), 2);
         assert_eq!(xs.data()[0].time, 3.0);
@@ -127,7 +124,7 @@ mod tests {
     #[test]
     fn intersecting_a_translated_sphere_with_a_ray() {
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
-        let mut s = Shape::sphere().with_transform(translation(5.0, 0.0, 0.0));
+        let s = Shape::sphere().with_transform(translation(5.0, 0.0, 0.0));
         let xs = s.intersects(r);
         assert_eq!(xs.data().len(), 0);
     }
@@ -180,7 +177,7 @@ mod tests {
     }
     #[test]
     fn normal_on_translated_sphere() {
-        let mut s = Shape::sphere().with_transform(Mat4::identity().translation(0.0, 1.0, 0.0));
+        let s = Shape::sphere().with_transform(Mat4::identity().translation(0.0, 1.0, 0.0));
         let n = s.normal_at(&point(0.0, 1.70711, -0.70711));
         assert_eq!(n, vector(0.0, 0.70711, -0.70711));
     }

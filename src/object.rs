@@ -87,9 +87,9 @@ impl Intersectable for Shape {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-struct TestShape;
+pub struct TestShape;
 impl LocalIntersect for TestShape {
-    fn local_intersect(&self, r: Ray) -> Vec<f64> {
+    fn local_intersect(&self, _r: Ray) -> Vec<f64> {
         todo!()
     }
 

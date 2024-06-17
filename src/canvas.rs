@@ -82,7 +82,6 @@ mod test {
         matrix::Mat4,
         object::Shape,
         ray::Ray,
-        sphere::Sphere,
         tuple::{point, vector},
     };
 
