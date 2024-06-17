@@ -17,7 +17,7 @@ impl From<[f64; 4]> for Tuple {
 }
 
 impl Tuple {
-    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
+    pub const fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
         Self { x, y, z, w }
     }
 
@@ -123,7 +123,7 @@ pub fn point(x: f64, y: f64, z: f64) -> Tuple {
     Tuple::new(x, y, z, 1.0)
 }
 
-pub fn vector(x: f64, y: f64, z: f64) -> Tuple {
+pub const fn vector(x: f64, y: f64, z: f64) -> Tuple {
     Tuple::new(x, y, z, 0.0)
 }
 

@@ -5,7 +5,7 @@ use crate::tuple::{vector, Tuple};
 pub struct Color(Tuple);
 
 impl Color {
-    pub fn new(r: f64, g: f64, b: f64) -> Self {
+    pub const fn new(r: f64, g: f64, b: f64) -> Self {
         Self(vector(r, g, b))
     }
 
@@ -24,8 +24,12 @@ impl Color {
         self.0.z
     }
 
-    pub fn black() -> Color {
+    pub const fn black() -> Color {
         Self::new(0.0, 0.0, 0.0)
+    }
+
+    pub const fn white() -> Color {
+        Self::new(1.0, 1.0, 1.0)
     }
 }
 

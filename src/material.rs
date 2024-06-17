@@ -1,4 +1,10 @@
-use crate::{color::Color, lights::Light, tuple::Tuple};
+use crate::{
+    color::Color,
+    lights::Light,
+    object::{self, Shape},
+    pattern::Pattern,
+    tuple::Tuple,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Material {
@@ -7,6 +13,7 @@ pub struct Material {
     pub diffuse: f64,
     pub specular: f64,
     pub shininess: f64,
+    pub pattern: Option<Pattern>,
 }
 
 impl Default for Material {
@@ -17,6 +24,7 @@ impl Default for Material {
             diffuse: 0.9,
             specular: 0.9,
             shininess: 200.0,
+            pattern: None,
         }
     }
 }
@@ -25,13 +33,17 @@ impl Material {
     pub fn lighting(
         &self,
         light: Light,
+        shape: Shape,
         point: Tuple,
         eyev: Tuple,
         normalv: Tuple,
         in_shadow: bool,
     ) -> Color {
         // combine light and material color
-        let effective_color = self.color * light.intensity;
+        let effective_color = match self.pattern {
+            Some(p) => p.color_at_shape(shape, point),
+            None => self.color,
+        } * light.intensity;
         // find direction to the light source
         let ambient = effective_color * self.ambient;
         if in_shadow {
@@ -66,6 +78,8 @@ mod test {
     use crate::{
         color::Color,
         lights::Light,
+        object::Shape,
+        pattern::Pattern,
         tuple::{point, vector},
     };
 
@@ -78,7 +92,44 @@ mod test {
         let normalv = vector(0.0, 0.0, -1.0);
         let light = Light::new(point(0.0, 0.0, -10.0), Color::new(1.0, 1.0, 1.0));
         let in_shadow = true;
-        let result = Material::default().lighting(light, position, eyev, normalv, in_shadow);
+        let result = Material::default().lighting(
+            light,
+            Shape::sphere(),
+            position,
+            eyev,
+            normalv,
+            in_shadow,
+        );
         assert_eq!(result, Color::new(0.1, 0.1, 0.1));
+    }
+
+    #[test]
+    fn lighting_with_a_pattern_applied() {
+        let mut material = Material::default();
+        material.pattern = Some(Pattern::stripped(Color::white(), Color::black()));
+        material.ambient = 1.0;
+        material.diffuse = 0.0;
+        material.specular = 0.0;
+        let eyev = vector(0.0, 0.0, -1.0);
+        let normalv = vector(0.0, 0.0, -1.0);
+        let light = Light::new(point(0.0, 0.0, -10.0), Color::white());
+        let c1 = material.lighting(
+            light,
+            Shape::sphere(),
+            point(0.9, 0.0, 0.0),
+            eyev,
+            normalv,
+            false,
+        );
+        let c2 = material.lighting(
+            light,
+            Shape::sphere(),
+            point(1.1, 0.0, 0.0),
+            eyev,
+            normalv,
+            false,
+        );
+        assert_eq!(c1, Color::white());
+        assert_eq!(c2, Color::black());
     }
 }

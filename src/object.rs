@@ -4,6 +4,7 @@ use crate::{
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,
     matrix::{Mat4, MatBase},
+    pattern::Pattern,
     plane::Plane,
     ray::Ray,
     sphere::Sphere,
@@ -64,12 +65,21 @@ impl Shape {
         self
     }
 
+    pub fn with_pattern(mut self, pattern: Pattern) -> Self {
+        self.material.pattern = Some(pattern);
+        self
+    }
+
     pub fn set_transform(&mut self, transform: Mat4) {
         self.transform = transform;
     }
 
     pub fn set_material(&mut self, material: Material) {
         self.material = material;
+    }
+
+    pub fn set_pattern(&mut self, pattern: Pattern) {
+        self.material.pattern = Some(pattern)
     }
 }
 

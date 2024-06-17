@@ -172,7 +172,14 @@ mod test {
                         canvas.write_pixel(
                             x,
                             y,
-                            h.object.material.lighting(light, p, eye, normal, false),
+                            h.object.material.lighting(
+                                light,
+                                Shape::sphere(),
+                                p,
+                                eye,
+                                normal,
+                                false,
+                            ),
                         );
                     }
                     None => canvas.write_pixel(x, y, Color::black()),
