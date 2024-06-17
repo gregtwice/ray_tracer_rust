@@ -3,6 +3,7 @@ use crate::{
     matrix::{Mat4, MatBase},
     ray::Ray,
     tuple::point,
+    util::MAX_REFLECTIONS,
     world::World,
 };
 
@@ -72,7 +73,7 @@ impl Camera {
                 let mut row = Vec::with_capacity(self.hsize);
                 for x in 0..self.hsize {
                     let r = self.ray_for_pixel(x, y);
-                    row.push(world.color_at(r))
+                    row.push(world.color_at(r, MAX_REFLECTIONS))
                 }
                 row
             })

@@ -1,8 +1,14 @@
 use std::ops::{Add, Mul, Sub};
 
 use crate::tuple::{vector, Tuple};
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Color(Tuple);
+
+impl PartialEq for Color {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
 
 impl Color {
     pub const fn new(r: f64, g: f64, b: f64) -> Self {

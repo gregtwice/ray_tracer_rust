@@ -87,7 +87,9 @@ impl Pattern {
                 }
             }
             PatternType::Checker { a, b } => {
-                if (p.x.abs() + p.y.abs() + p.z.abs()) % 2.0 == 0.0 {
+                dbg!(p.x.floor());
+                dbg!(p.x.floor() + p.y.floor() + p.z.floor());
+                if (p.x.floor() + p.y.floor() + p.z.floor()) % 2.0 == 0.0 {
                     a
                 } else {
                     b
@@ -198,20 +200,20 @@ mod tests {
         let p = Pattern::checker(WHITE, BLACK);
         assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
         assert_eq!(p.color_at(point(0.99, 0.0, 0.0)), WHITE);
-        assert_eq!(p.color_at(point(1.01, 0.0, 1.0)), BLACK);
+        assert_eq!(p.color_at(point(1.01, 0.0, 0.0)), BLACK);
     }
 
     #[test]
     fn checkers_should_repeat_in_y() {
-        let p = Pattern::ring(WHITE, BLACK);
+        let p = Pattern::checker(WHITE, BLACK);
         assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
         assert_eq!(p.color_at(point(0.0, 0.99, 0.0)), WHITE);
-        assert_eq!(p.color_at(point(0.0, 1.01, 1.0)), BLACK);
+        assert_eq!(p.color_at(point(0.0, 1.01, 0.0)), BLACK);
     }
 
     #[test]
     fn checkers_should_repeat_in_z() {
-        let p = Pattern::ring(WHITE, BLACK);
+        let p = Pattern::checker(WHITE, BLACK);
         assert_eq!(p.color_at(point(0.0, 0.0, 0.0)), WHITE);
         assert_eq!(p.color_at(point(0.0, 0.0, 0.99)), WHITE);
         assert_eq!(p.color_at(point(0.0, 0.0, 1.01)), BLACK);

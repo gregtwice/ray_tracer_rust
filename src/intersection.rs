@@ -11,6 +11,7 @@ pub struct Computations {
     pub inside: bool,
     pub eye_v: Tuple,
     pub normal_v: Tuple,
+    pub reflect_v: Tuple,
 }
 
 impl Intersections {
@@ -65,6 +66,7 @@ impl Intersection {
         } else {
             false
         };
+        let reflect_v = r.direction.reflect(&normal_v);
 
         Computations {
             i: *self,
@@ -73,12 +75,15 @@ impl Intersection {
             eye_v,
             normal_v,
             over_point: p + normal_v * EPSILON,
+            reflect_v,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+
+    use std::f64::consts::SQRT_2;
 
     use crate::{
         intersection::Intersections,
@@ -195,5 +200,17 @@ mod tests {
         let comps = i.prepare_computations(r);
         assert!(comps.over_point.z < -EPSILON / 2.0);
         assert!(comps.point.z > comps.over_point.z);
+    }
+
+    #[test]
+    fn precomputing_the_reflection_vector() {
+        let s = Shape::plane();
+        let r = Ray::new(
+            point(0.0, 1.0, -1.0),
+            vector(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0),
+        );
+        let i = Intersection::new(SQRT_2, s);
+        let comps = i.prepare_computations(r);
+        assert_eq!(comps.reflect_v, vector(0.0, SQRT_2 / 2.0, SQRT_2 / 2.0));
     }
 }
