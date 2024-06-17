@@ -80,6 +80,7 @@ mod test {
         lights::Light,
         material::Material,
         matrix::Mat4,
+        object::Shape,
         ray::Ray,
         sphere::Sphere,
         tuple::{point, vector},
@@ -148,9 +149,9 @@ mod test {
         let wall_size = 7f64;
         let wall_z = 10.0;
         let pixel_size = wall_size / nb_pixels;
-        let mut s = Sphere::new();
-        s.set_material(Material::default());
-        s.material().color = Color::new(1.0, 0.2, 1.0);
+        let mut s = Shape::sphere();
+        s.material = Material::default();
+        s.material.color = Color::new(1.0, 0.2, 1.0);
         let light_position = point(-10.0, 10.0, -10.0);
         let light_color = Color::new(1.0, 1.0, 1.0);
         let light = Light::new(light_position, light_color);
@@ -171,7 +172,7 @@ mod test {
                         canvas.write_pixel(
                             x,
                             y,
-                            h.object.material().lighting(light, p, eye, normal, false),
+                            h.object.material.lighting(light, p, eye, normal, false),
                         );
                     }
                     None => canvas.write_pixel(x, y, Color::black()),
