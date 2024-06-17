@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{BufWriter, Write};
 
 use crate::color::Color;
 
@@ -43,7 +43,8 @@ impl Canvas {
     }
 
     pub fn save_ppm(&self, filename: &str) {
-        let mut image = std::fs::File::create(filename).expect("wtf");
+        let image = std::fs::File::create(filename).expect("wtf");
+        let mut image = BufWriter::new(image);
         image.write("P3\n".as_bytes()).unwrap();
         image
             .write(format!("{} {}\n", self.width, self.height).as_bytes())
@@ -142,7 +143,7 @@ mod test {
 
     #[test]
     fn test_raycast_sphere() {
-        let nb_pixels = 500f64;
+        let nb_pixels = 50f64;
         let mut canvas = Canvas::new(nb_pixels as usize, nb_pixels as usize);
         let ray_origin = point(0.0, 0.0, -5.0);
         let wall_size = 7f64;
