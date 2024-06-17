@@ -13,7 +13,7 @@ use crate::{
 
 pub struct World {
     lights: Vec<Light>,
-    objects: Vec<Object>,
+    pub objects: Vec<Object>,
 }
 
 impl World {
