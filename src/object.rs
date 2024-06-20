@@ -26,6 +26,8 @@ pub enum Object {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Shape {
     pub transform: Mat4,
+    pub transform_inverse: Mat4,
+
     pub material: Material,
     object: Object,
 }
@@ -34,7 +36,17 @@ impl Shape {
     pub fn sphere() -> Self {
         Self {
             transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
             material: Material::default(),
+            object: Object::Sphere(Sphere),
+        }
+    }
+
+    pub fn glass_sphere() -> Self {
+        Self {
+            transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
+            material: Material::default().refractive_index(1.5).transparency(1.0),
             object: Object::Sphere(Sphere),
         }
     }
@@ -42,6 +54,7 @@ impl Shape {
     pub fn plane() -> Self {
         Self {
             transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
             material: Material::default(),
             object: Object::Plane(Plane),
         }
@@ -50,6 +63,7 @@ impl Shape {
     pub fn default_shape() -> Self {
         Self {
             transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
             material: Material::default(),
             object: Object::No(TestShape),
         }
@@ -57,6 +71,7 @@ impl Shape {
 
     pub fn with_transform(mut self, transform: Mat4) -> Self {
         self.transform = transform;
+        self.transform_inverse = transform.inverse();
         self
     }
 
@@ -72,6 +87,7 @@ impl Shape {
 
     pub fn set_transform(&mut self, transform: Mat4) {
         self.transform = transform;
+        self.transform_inverse = transform.inverse()
     }
 
     pub fn set_material(&mut self, material: Material) {
@@ -85,7 +101,7 @@ impl Shape {
 
 impl Intersectable for Shape {
     fn intersects(&self, r: crate::ray::Ray) -> Intersections {
-        let r = r.transform(self.transform.inverse());
+        let r = r.transform(self.transform_inverse);
         let xs = match self.object {
             Object::Sphere(s) => s.local_intersect(r),
             Object::No(_) => unimplemented!(),
@@ -96,13 +112,13 @@ impl Intersectable for Shape {
     }
 
     fn normal_at(&self, point: &Tuple) -> Tuple {
-        let local_point = (self.transform.inverse()) * (*point);
+        let local_point = (self.transform_inverse) * (*point);
         let local_normal = match self.object {
             Object::Sphere(s) => s.local_normal_at(&local_point),
             Object::No(ts) => ts.local_normal_at(&local_point),
             Object::Plane(p) => p.local_normal_at(&local_point),
         };
-        let mut world_normal = Mat4::transpose(self.transform.inverse()) * local_normal;
+        let mut world_normal = Mat4::transpose(self.transform_inverse) * local_normal;
         world_normal.w = 0.0;
         world_normal.norm()
     }

@@ -15,6 +15,7 @@ pub struct Camera {
     vsize: usize,
     fov: f64,
     pub transform: Mat4,
+    pub transform_inverse: Mat4,
     pixel_size: f64,
     half_width: f64,
     half_height: f64,
@@ -28,6 +29,7 @@ impl Camera {
             vsize,
             fov,
             transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
             pixel_size: pixel_size,
             half_height,
             half_width,
@@ -50,6 +52,11 @@ impl Camera {
         (half_height, half_width, (half_width * 2.0) / hsize as f64)
     }
 
+    pub fn set_transform(&mut self, transform: Mat4) {
+        self.transform = transform;
+        self.transform_inverse = transform.inverse();
+    }
+
     pub fn ray_for_pixel(&self, x: usize, y: usize) -> Ray {
         let x = x as f64;
         let y = y as f64;
@@ -59,8 +66,8 @@ impl Camera {
         let world_x = self.half_width - offset_x;
         let world_y = self.half_height - offset_y;
 
-        let pixel = (self.transform.inverse()) * point(world_x, world_y, -1.0);
-        let origin = (self.transform.inverse()) * point(0.0, 0.0, 0.0);
+        let pixel = (self.transform_inverse) * point(world_x, world_y, -1.0);
+        let origin = (self.transform_inverse) * point(0.0, 0.0, 0.0);
         let direction = (pixel - origin).norm();
         Ray::new(origin, direction)
     }
@@ -128,7 +135,7 @@ mod test {
     #[test]
     fn ray_transformed_camera() {
         let mut c = Camera::new(201, 101, PI / 2.0);
-        c.transform = translation(0.0, -2.0, 5.0).rot_y(PI / 4.0);
+        c.set_transform(translation(0.0, -2.0, 5.0).rot_y(PI / 4.0));
         let r = c.ray_for_pixel(100, 50);
         assert_eq!(r.origin, point(0.0, 2.0, -5.0));
         assert_eq!(r.direction, vector(SQRT_2 / 2.0, 0.0, -SQRT_2 / 2.0));
@@ -141,7 +148,7 @@ mod test {
         let from = point(0.0, 0.0, -5.0);
         let to = point(0.0, 0.0, 0.0);
         let up = vector(0.0, 1.0, 0.0);
-        c.transform = view_transform(from, to, up);
+        c.set_transform(view_transform(from, to, up));
         let image = c.render(w);
         assert_eq!(image.pixel_at(5, 5), Color::new(0.38066, 0.47583, 0.2855))
     }

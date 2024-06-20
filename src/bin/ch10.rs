@@ -15,14 +15,14 @@ fn main() {
     let floor = Shape::plane();
 
     let backdrop = Shape::plane()
-        .with_transform(rot_x(FRAC_PI_2).translation(0.0, 0.0, 5.0))
+        .with_transform(rot_x(FRAC_PI_2).rot_y(PI / 3.0).translation(0.0, 0.0, 5.0))
         .with_pattern(
-            Pattern::stripped(Color::new(0.0, 1.0, 0.0), Color::new(0.0, 0.0, 1.0))
-                .with_transform(rot_y(FRAC_PI_2)),
+            Pattern::ring(Color::new(0.5, 0.5, 0.5), Color::new(1.0, 0.0, 1.0))
+                .with_transform(rot_y(FRAC_PI_2).translation(10.0, 0.0, 0.0)),
         );
 
     let mut middle = Shape::sphere();
-    middle.transform = translation(-0.5, 1.0, 0.5);
+    middle.set_transform(translation(-0.5, 1.0, 0.5));
     middle.material.color = Color::new(0.1, 1.0, 0.5);
     middle.material.diffuse = 0.7;
     middle.material.specular = 0.3;
@@ -31,13 +31,13 @@ fn main() {
         Pattern::gradient(Color::new(0.6, 0.6, 1.0), Color::new(1.0, 0.5, 0.5))
             .with_transform(scaling(0.5, 0.5, 0.5).rot_x(FRAC_PI_2)),
     );
-    right.transform = scaling(0.5, 0.5, 0.5).translation(1.5, 0.5, -0.5);
+    right.set_transform(scaling(0.5, 0.5, 0.5).translation(1.5, 0.5, -0.5));
     right.material.color = Color::new(0.5, 1.0, 0.1);
     right.material.diffuse = 0.7;
     right.material.specular = 0.3;
 
     let mut left = Shape::sphere();
-    left.transform = scaling(0.33, 0.33, 0.33).translation(-1.5, 0.33, -0.75);
+    left.set_transform(scaling(0.33, 0.33, 0.33).translation(-1.5, 0.33, -0.75));
     left.material.color = Color::new(1.0, 0.8, 0.1);
     left.material.diffuse = 0.7;
     left.material.specular = 0.3;
@@ -49,12 +49,12 @@ fn main() {
     world.objects.push(floor);
     world.objects.push(backdrop);
 
-    let mut camera = Camera::new(500, 250, PI / 3.0);
-    camera.transform = view_transform(
+    let mut camera = Camera::new(1920, 1080, PI / 3.0);
+    camera.set_transform(view_transform(
         point(0.0, 1.5, -5.0),
         point(0.0, 1.0, 0.0),
         vector(0.0, 1.0, 0.0),
-    );
+    ));
     let image = camera.render(world);
     image.save_ppm("ch10.ppm");
 }

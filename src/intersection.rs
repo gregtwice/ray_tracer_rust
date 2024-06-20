@@ -1,17 +1,23 @@
-use std::fmt::Debug;
+use std::{f64::NAN, fmt::Debug};
 
 use crate::{object::Shape, ray::Ray, tuple::Tuple, util::EPSILON};
 
 pub struct Intersections(Vec<Intersection>);
 
+#[derive(Clone, Copy)]
 pub struct Computations {
     pub i: Intersection,
     pub point: Tuple,
     pub over_point: Tuple,
+    pub under_point: Tuple,
     pub inside: bool,
     pub eye_v: Tuple,
     pub normal_v: Tuple,
     pub reflect_v: Tuple,
+    /// Refraction calculations
+    pub n1: f64,
+    /// Refraction calculations
+    pub n2: f64,
 }
 
 impl Intersections {
@@ -56,7 +62,42 @@ impl Intersection {
         Self { time: t, object: s }
     }
 
-    pub fn prepare_computations(&self, r: Ray) -> Computations {
+    pub fn prepare_computations(&self, r: Ray, xs: &Intersections) -> Computations {
+        let mut containers: Vec<Shape> = vec![];
+        let mut n1 = 1.0;
+        let mut n2 = 1.0;
+        for x in xs.0.iter() {
+            if self == x {
+                if containers.is_empty() {
+                    n1 = 1.0
+                } else {
+                    n1 = containers
+                        .last()
+                        .expect("containers can't be empty")
+                        .material
+                        .refractive_index;
+                }
+            }
+            if let Some(index) = containers.iter().position(|&s| x.object == s) {
+                containers.remove(index);
+            } else {
+                containers.push(x.object);
+            }
+
+            if self == x {
+                if containers.is_empty() {
+                    n2 = 1.0
+                } else {
+                    n2 = containers
+                        .last()
+                        .expect("containers can't be empty")
+                        .material
+                        .refractive_index;
+                }
+                break;
+            }
+        }
+
         let p = r.position(self.time);
         let mut normal_v = self.object.normal_at(&p);
         let eye_v = -r.direction;
@@ -75,7 +116,10 @@ impl Intersection {
             eye_v,
             normal_v,
             over_point: p + normal_v * EPSILON,
+            under_point: p - normal_v * EPSILON,
             reflect_v,
+            n1,
+            n2,
         }
     }
 }
@@ -83,13 +127,13 @@ impl Intersection {
 #[cfg(test)]
 mod tests {
 
-    use std::f64::consts::SQRT_2;
+    use std::{collections::HashMap, f64::consts::SQRT_2};
 
     use crate::{
         intersection::Intersections,
         object::Shape,
         ray::Ray,
-        transformations::translation,
+        transformations::{scaling, translation},
         tuple::{point, vector},
         util::EPSILON,
     };
@@ -162,7 +206,7 @@ mod tests {
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
         let s = Shape::sphere();
         let i = Intersection::new(4.0, s);
-        let comps = i.prepare_computations(r);
+        let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         assert_eq!(comps.i.object, s);
         assert_eq!(comps.point, point(0.0, 0.0, -1.0));
         assert_eq!(comps.eye_v, vector(0.0, 0.0, -1.0));
@@ -175,7 +219,7 @@ mod tests {
         let s = Shape::sphere();
 
         let i = Intersection::new(4.0, s);
-        let comps = i.prepare_computations(r);
+        let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         assert_eq!(comps.inside, false);
     }
 
@@ -185,7 +229,7 @@ mod tests {
         let s = Shape::sphere();
 
         let i = Intersection::new(1.0, s);
-        let comps = i.prepare_computations(r);
+        let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         assert_eq!(comps.point, point(0.0, 0.0, 1.0));
         assert_eq!(comps.eye_v, vector(0.0, 0.0, -1.0));
         assert_eq!(comps.normal_v, vector(0.0, 0.0, -1.0));
@@ -197,7 +241,7 @@ mod tests {
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
         let s = Shape::sphere().with_transform(translation(0.0, 0.0, 1.0));
         let i = Intersection::new(5.0, s);
-        let comps = i.prepare_computations(r);
+        let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         assert!(comps.over_point.z < -EPSILON / 2.0);
         assert!(comps.point.z > comps.over_point.z);
     }
@@ -210,7 +254,51 @@ mod tests {
             vector(0.0, -SQRT_2 / 2.0, SQRT_2 / 2.0),
         );
         let i = Intersection::new(SQRT_2, s);
-        let comps = i.prepare_computations(r);
+        let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         assert_eq!(comps.reflect_v, vector(0.0, SQRT_2 / 2.0, SQRT_2 / 2.0));
+    }
+
+    #[test]
+    fn finding_n1_and_n2_at_various_intersections() {
+        let cases = vec![
+            (1.0, 1.5),
+            (1.5, 2.0),
+            (2.0, 2.5),
+            (2.5, 2.5),
+            (2.5, 1.5),
+            (1.5, 1.0),
+        ];
+
+        let mut a = Shape::glass_sphere().with_transform(scaling(2.0, 2.0, 2.0));
+        a.material.refractive_index = 1.5;
+        let mut b = Shape::glass_sphere().with_transform(translation(0.0, 0.0, -0.25));
+        b.material.refractive_index = 2.0;
+        let mut c = Shape::glass_sphere().with_transform(translation(0.0, 0.0, 0.25));
+        c.material.refractive_index = 2.5;
+        let r = Ray::new(point(0.0, 0.0, -4.0), vector(0.0, 0.0, 1.0));
+        let intersections = vec![
+            Intersection::new(2.0, a),
+            Intersection::new(2.75, b),
+            Intersection::new(3.25, c),
+            Intersection::new(4.75, b),
+            Intersection::new(5.25, c),
+            Intersection::new(6.0, a),
+        ];
+        for (idx, x) in intersections.iter().enumerate() {
+            let comps = x.prepare_computations(r, &Intersections::new(intersections.clone()));
+            assert_eq!(comps.n1, cases[idx].0);
+            assert_eq!(comps.n2, cases[idx].1);
+        }
+    }
+
+    #[test]
+    fn under_point_is_below_the_surface() {
+        let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
+        let s = Shape::glass_sphere().with_transform(translation(0.0, 0.0, 1.0));
+        let i = Intersection::new(5.0, s);
+        let xs = Intersections(vec![i]);
+        let comps = i.prepare_computations(r, &xs);
+        assert!(comps.under_point.z > EPSILON / 2.0);
+        assert!(comps.point.z < comps.under_point.z);
     }
 }

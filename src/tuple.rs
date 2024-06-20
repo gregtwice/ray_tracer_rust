@@ -32,7 +32,7 @@ impl Tuple {
     }
 
     pub fn dot(&self, rhs: Self) -> f64 {
-        assert!(self.w == 0.0);
+        assert!(self.w == 0.0, "{:?}", self);
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 

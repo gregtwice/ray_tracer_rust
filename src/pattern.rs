@@ -1,6 +1,6 @@
 use crate::{
     color::Color,
-    matrix::{Mat4, MatBase},
+    matrix::{Mat4, MatBase, Matrix},
     object::Shape,
     tuple::Tuple,
 };
@@ -11,6 +11,7 @@ pub enum PatternType {
     Gradient { a: Color, b: Color },
     Ring { a: Color, b: Color },
     Checker { a: Color, b: Color },
+    Test {},
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -35,6 +36,12 @@ impl Pattern {
         }
     }
 
+    pub fn test_pattern() -> Self {
+        Self {
+            p_type: PatternType::Test {},
+            transform: Matrix::identity(),
+        }
+    }
     pub fn checker(a: Color, b: Color) -> Self {
         use PatternType::*;
         Self {
@@ -56,11 +63,12 @@ impl Pattern {
             PatternType::Gradient { a, b } => vec![a, b],
             PatternType::Ring { a, b } => vec![a, b],
             PatternType::Checker { a, b } => vec![a, b],
+            PatternType::Test {} => vec![],
         }
     }
 
     pub fn pattern_at_shape(&self, shape: Shape, world_point: Tuple) -> Color {
-        let object_point = shape.transform.inverse() * world_point;
+        let object_point = shape.transform_inverse * world_point;
         let pattern_point = self.transform.inverse() * object_point;
         self.color_at(pattern_point)
     }
@@ -87,14 +95,13 @@ impl Pattern {
                 }
             }
             PatternType::Checker { a, b } => {
-                dbg!(p.x.floor());
-                dbg!(p.x.floor() + p.y.floor() + p.z.floor());
                 if (p.x.floor() + p.y.floor() + p.z.floor()) % 2.0 == 0.0 {
                     a
                 } else {
                     b
                 }
             }
+            PatternType::Test {} => Color::new(p.x, p.y, p.z),
         }
     }
 
