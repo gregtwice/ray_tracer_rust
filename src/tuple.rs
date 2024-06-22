@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, BitXor, Div, Mul, Neg, Sub};
 
 use crate::util::flt_eq;
 
@@ -39,7 +39,7 @@ impl Tuple {
     pub fn reflect(&self, normal: &Self) -> Self {
         assert_eq!(self.w, 0.0);
         assert_eq!(normal.w, 0.0);
-        *self - *normal * 2.0 * self.dot(*normal)
+        *self - *normal * 2.0 * (*self ^ (*normal))
     }
 
     pub fn cross(&self, rhs: Self) -> Self {
@@ -110,6 +110,14 @@ impl Div<f64> for Tuple {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
         Tuple::new(self.x / rhs, self.y / rhs, self.z / rhs, self.w / rhs)
+    }
+}
+
+impl BitXor<Tuple> for Tuple {
+    type Output = f64;
+
+    fn bitxor(self, rhs: Tuple) -> Self::Output {
+        self.dot(rhs)
     }
 }
 

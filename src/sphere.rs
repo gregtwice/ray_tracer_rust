@@ -10,9 +10,9 @@ pub struct Sphere;
 impl LocalIntersect for Sphere {
     fn local_intersect(&self, r: Ray) -> Vec<f64> {
         let sphere_to_ray = r.origin - point(0.0, 0.0, 0.0);
-        let a = r.direction.dot(r.direction);
-        let b = 2.0 * r.direction.dot(sphere_to_ray);
-        let c = sphere_to_ray.dot(sphere_to_ray) - 1.0;
+        let a = r.direction ^ r.direction;
+        let b = 2.0 * (r.direction ^ sphere_to_ray);
+        let c = (sphere_to_ray ^ sphere_to_ray) - 1.0;
         let discriminant = b * b - 4.0 * a * c;
         if discriminant < 0.0 {
             vec![]

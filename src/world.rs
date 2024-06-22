@@ -49,7 +49,13 @@ impl World {
             self.is_shadowed(comps.over_point),
         );
         let reflected = self.reflect_color(comps, depth);
-        surface + reflected + self.refracted_color(comps, depth)
+        let refracted = self.refracted_color(comps, depth);
+        let material = comps.i.object.material;
+        if material.reflective > 0.0 && material.transparency > 0.0 {
+            let reflectance = comps.schlick();
+            return surface + reflected * reflectance + refracted * (1.0 - reflectance);
+        }
+        surface + reflected + refracted
     }
 
     pub fn reflect_color(&self, comps: Computations, depth: usize) -> Color {
@@ -90,8 +96,9 @@ impl World {
             Color::black()
         } else {
             // compute snell's law
-            let n_ratio = comps.n1 / comps.n2;
-            let cos_i = comps.eye_v.dot(comps.normal_v);
+            let (n1, n2) = comps.n;
+            let n_ratio = n1 / n2;
+            let cos_i = comps.eye_v ^ comps.normal_v;
             let sin2_t = n_ratio * n_ratio * (1.0 - (cos_i * cos_i));
             if sin2_t > 1.0 {
                 Color::black()
@@ -402,5 +409,35 @@ mod tests {
         let comps = xs.data()[0].prepare_computations(r, &xs);
         let c = w.shade_hit(comps, 5);
         assert_eq!(c, Color::new(0.93642, 0.68642, 0.68642));
+    }
+    #[test]
+    fn shade_hit_with_reflective_transparent_material() {
+        let mut w = World::ch7_default();
+        let floor = Shape::plane()
+            .with_material(
+                Material::default()
+                    .transparency(0.5)
+                    .reflective(0.5)
+                    .refractive_index(1.5),
+            )
+            .with_transform(translation(0.0, -1.0, 0.0));
+        w.objects.push(floor);
+        let ball = Shape::sphere()
+            .with_material(
+                Material::default()
+                    .ambient(0.5)
+                    .color(Color::new(1.0, 0.0, 0.0)),
+            )
+            .with_transform(translation(0.0, -3.5, -0.5));
+        w.objects.push(ball);
+
+        let r = Ray::new(
+            point(0.0, 0.0, -3.0),
+            vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
+        );
+        let xs = Intersections::new(vec![Intersection::new(f64::sqrt(2.0), floor)]);
+        let comps = xs.data()[0].prepare_computations(r, &xs);
+        let c = w.shade_hit(comps, 5);
+        assert_eq!(c, Color::new(0.93391, 0.69643, 0.69243));
     }
 }

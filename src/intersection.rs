@@ -1,8 +1,15 @@
-use std::{f64::NAN, fmt::Debug};
+use std::{fmt::Debug, ops::Index};
 
 use crate::{object::Shape, ray::Ray, tuple::Tuple, util::EPSILON};
 
 pub struct Intersections(Vec<Intersection>);
+
+impl Index<usize> for Intersections {
+    type Output = Intersection;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct Computations {
@@ -13,11 +20,30 @@ pub struct Computations {
     pub inside: bool,
     pub eye_v: Tuple,
     pub normal_v: Tuple,
+    pub dot_eyev_normal_v: f64,
     pub reflect_v: Tuple,
+
     /// Refraction calculations
-    pub n1: f64,
-    /// Refraction calculations
-    pub n2: f64,
+    pub n: (f64, f64),
+}
+
+impl Computations {
+    pub fn schlick(&self) -> f64 {
+        let mut cos = self.dot_eyev_normal_v;
+        let (n1, n2) = self.n;
+
+        if n1 > n2 {
+            let n = n1 / n2;
+            let sin2_t = n.powi(2) * (1.0 - cos.powi(2));
+            if sin2_t > 1.0 {
+                return 1.0;
+            }
+            cos = f64::sqrt(1.0 - sin2_t);
+        }
+
+        let r0 = ((n1 - n2) / (n1 + n2)).powi(2);
+        r0 + (1.0 - r0) * (1.0 - cos).powi(5)
+    }
 }
 
 impl Intersections {
@@ -101,7 +127,7 @@ impl Intersection {
         let p = r.position(self.time);
         let mut normal_v = self.object.normal_at(&p);
         let eye_v = -r.direction;
-        let inside = if (normal_v.dot(eye_v)) < 0.0 {
+        let inside = if (normal_v ^ eye_v) < 0.0 {
             normal_v = -normal_v;
             true
         } else {
@@ -115,11 +141,11 @@ impl Intersection {
             inside,
             eye_v,
             normal_v,
+            dot_eyev_normal_v: eye_v ^ normal_v,
             over_point: p + normal_v * EPSILON,
             under_point: p - normal_v * EPSILON,
             reflect_v,
-            n1,
-            n2,
+            n: (n1, n2),
         }
     }
 }
@@ -127,7 +153,7 @@ impl Intersection {
 #[cfg(test)]
 mod tests {
 
-    use std::{collections::HashMap, f64::consts::SQRT_2};
+    use std::f64::consts::SQRT_2;
 
     use crate::{
         intersection::Intersections,
@@ -135,7 +161,7 @@ mod tests {
         ray::Ray,
         transformations::{scaling, translation},
         tuple::{point, vector},
-        util::EPSILON,
+        util::{flt_eq, EPSILON},
     };
 
     use super::{Intersectable, Intersection};
@@ -286,8 +312,9 @@ mod tests {
         ];
         for (idx, x) in intersections.iter().enumerate() {
             let comps = x.prepare_computations(r, &Intersections::new(intersections.clone()));
-            assert_eq!(comps.n1, cases[idx].0);
-            assert_eq!(comps.n2, cases[idx].1);
+            let (n1, n2) = comps.n;
+            assert_eq!(n1, cases[idx].0);
+            assert_eq!(n2, cases[idx].1);
         }
     }
 
@@ -300,5 +327,42 @@ mod tests {
         let comps = i.prepare_computations(r, &xs);
         assert!(comps.under_point.z > EPSILON / 2.0);
         assert!(comps.point.z < comps.under_point.z);
+    }
+
+    #[test]
+    fn schlick_approximation_under_total_internal_reflection() {
+        let s = Shape::glass_sphere();
+        let r = Ray::new(point(0.0, 0.0, -SQRT_2 / 2.0), vector(0.0, 1.0, 0.0));
+        let xs = Intersections::new(vec![
+            Intersection::new(-SQRT_2 / 2.0, s),
+            Intersection::new(SQRT_2 / 2.0, s),
+        ]);
+        let comps = xs[1].prepare_computations(r, &xs);
+        let reflectance = comps.schlick();
+        assert_eq!(reflectance, 1.0)
+    }
+
+    #[test]
+    fn schlick_with_a_perpendicular_viewing_angle() {
+        let s = Shape::glass_sphere();
+        let r = Ray::new(point(0.0, 0.0, 0.0), vector(0.0, 1.0, 0.0));
+        let xs = Intersections::new(vec![Intersection::new(-1.0, s), Intersection::new(1.0, s)]);
+        let comps = xs[1].prepare_computations(r, &xs);
+        let reflectance = comps.schlick();
+        assert!(flt_eq(reflectance, 0.04));
+    }
+
+    #[test]
+    fn schlick_with_a_small_viewing_angle() {
+        let s = Shape::glass_sphere();
+        let r = Ray::new(point(0.0, 0.99, -2.0), vector(0.0, 0.0, 1.0));
+        let xs = Intersections::new(vec![Intersection::new(1.8589, s)]);
+        let comps = xs[0].prepare_computations(r, &xs);
+        let reflectance = comps.schlick();
+        assert!(
+            flt_eq(reflectance, 0.48873),
+            "{} != 0.48873    ",
+            reflectance
+        );
     }
 }

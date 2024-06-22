@@ -50,7 +50,7 @@ impl Material {
             return ambient;
         }
         let lightv = (light.position - point).norm();
-        let ligtht_dot_normal = lightv.dot(normalv);
+        let ligtht_dot_normal = lightv ^ normalv;
         let diffuse;
         let specular;
         if ligtht_dot_normal < 0.0 {
@@ -60,7 +60,7 @@ impl Material {
             diffuse = effective_color * self.diffuse * ligtht_dot_normal;
 
             let reflect_v = (-lightv).reflect(&normalv);
-            let relect_dot_eye = reflect_v.dot(eyev);
+            let relect_dot_eye = reflect_v ^ eyev;
             if relect_dot_eye <= 0.0 {
                 specular = Color::black();
             } else {
