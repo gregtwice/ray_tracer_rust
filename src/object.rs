@@ -11,34 +11,42 @@ use crate::{
     tuple::{vector, Tuple},
 };
 
-pub trait LocalIntersect: Debug + PartialEq {
+pub trait LocalIntersect: Debug + Sync {
     fn local_intersect(&self, r: Ray) -> Vec<f64>;
     fn local_normal_at(&self, object_point: &Tuple) -> Tuple;
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum Object {
-    Sphere(Sphere),
-    Plane(Plane),
-    No(TestShape),
-}
+// #[derive(Debug, PartialEq, Clone, Copy)]
+// pub enum Object {
+//     Sphere(Sphere),
+//     Plane(Plane),
+//     No(TestShape),
+// }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Shape {
+#[derive(Debug, Clone, Copy)]
+pub struct Shape<'world> {
     pub transform: Mat4,
     pub transform_inverse: Mat4,
-
     pub material: Material,
-    object: Object,
+    pub object: &'world dyn LocalIntersect,
 }
 
-impl Shape {
+impl<'world> PartialEq for Shape<'world> {
+    fn eq(&self, other: &Self) -> bool {
+        self.transform == other.transform
+            && self.transform_inverse == other.transform_inverse
+            && self.material == other.material
+            && std::ptr::eq(self.object, other.object)
+    }
+}
+
+impl<'world> Shape<'world> {
     pub fn sphere() -> Self {
         Self {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: Object::Sphere(Sphere),
+            object: &Sphere,
         }
     }
 
@@ -47,7 +55,7 @@ impl Shape {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default().refractive_index(1.5).transparency(1.0),
-            object: Object::Sphere(Sphere),
+            object: &Sphere,
         }
     }
 
@@ -56,7 +64,7 @@ impl Shape {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: Object::Plane(Plane),
+            object: &Plane,
         }
     }
 
@@ -65,7 +73,7 @@ impl Shape {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: Object::No(TestShape),
+            object: &TestShape,
         }
     }
 
@@ -99,25 +107,18 @@ impl Shape {
     }
 }
 
-impl Intersectable for Shape {
+impl<'world> Intersectable for Shape<'world> {
     fn intersects(&self, r: crate::ray::Ray) -> Intersections {
         let r = r.transform(self.transform_inverse);
-        let xs = match self.object {
-            Object::Sphere(s) => s.local_intersect(r),
-            Object::No(_) => unimplemented!(),
-            Object::Plane(p) => p.local_intersect(r),
-        };
+        let xs = self.object.local_intersect(r);
 
-        Intersections::new(xs.iter().map(|t| Intersection::new(*t, *self)).collect())
+        Intersections::new(xs.iter().map(|t| Intersection::new(*t, self)).collect())
     }
 
     fn normal_at(&self, point: &Tuple) -> Tuple {
         let local_point = (self.transform_inverse) * (*point);
-        let local_normal = match self.object {
-            Object::Sphere(s) => s.local_normal_at(&local_point),
-            Object::No(ts) => ts.local_normal_at(&local_point),
-            Object::Plane(p) => p.local_normal_at(&local_point),
-        };
+        let local_normal = self.object.local_normal_at(&local_point);
+
         let mut world_normal = Mat4::transpose(self.transform_inverse) * local_normal;
         world_normal.w = 0.0;
         world_normal.norm()
@@ -128,7 +129,7 @@ impl Intersectable for Shape {
 pub struct TestShape;
 impl LocalIntersect for TestShape {
     fn local_intersect(&self, _r: Ray) -> Vec<f64> {
-        todo!()
+        unimplemented!()
     }
 
     fn local_normal_at(&self, object_point: &Tuple) -> Tuple {

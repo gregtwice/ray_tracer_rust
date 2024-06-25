@@ -10,12 +10,12 @@ use crate::{
     tuple::{point, Tuple},
 };
 
-pub struct World {
+pub struct World<'world> {
     lights: Vec<Light>,
-    pub objects: Vec<Shape>,
+    pub objects: Vec<Shape<'world>>,
 }
 
-impl World {
+impl<'world> World<'world> {
     pub fn new() -> Self {
         Self {
             lights: vec![],
@@ -42,7 +42,7 @@ impl World {
     pub fn shade_hit(&self, comps: Computations, depth: usize) -> Color {
         let surface = comps.i.object.material.lighting(
             self.lights[0],
-            comps.i.object,
+            *comps.i.object,
             comps.over_point,
             comps.eye_v,
             comps.normal_v,
@@ -156,7 +156,7 @@ mod tests {
         let w = World::ch7_default();
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
         let s = w.objects[0];
-        let i = Intersection::new(4.0, s);
+        let i = Intersection::new(4.0, &s);
         let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         let c = w.shade_hit(comps, MAX_REFLECTIONS);
         assert_eq!(c, Color::new(0.38066, 0.47583, 0.2855))
@@ -168,7 +168,7 @@ mod tests {
         w.lights = vec![Light::new(point(0.0, 0.25, 0.0), Color::new(1.0, 1.0, 1.0))];
         let r = Ray::new(point(0.0, 0.0, 0.0), vector(0.0, 0.0, 1.0));
         let s = w.objects[1];
-        let i = Intersection::new(0.5, s);
+        let i = Intersection::new(0.5, &s);
         let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         let c = w.shade_hit(comps, MAX_REFLECTIONS);
         assert_eq!(c, Color::new(0.90498, 0.90498, 0.90498))
@@ -241,7 +241,7 @@ mod tests {
         s2.set_transform(translation(0.0, 0.0, 10.0));
         w.objects.push(s2);
         let r = Ray::new(point(0.0, 0.0, 5.0), vector(0.0, 0.0, 1.0));
-        let i = Intersection::new(4.0, s2);
+        let i = Intersection::new(4.0, &s2);
         let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         let c = w.shade_hit(comps, MAX_REFLECTIONS);
         assert_eq!(c, Color::new(0.1, 0.1, 0.1));
@@ -252,7 +252,7 @@ mod tests {
         let mut w = World::ch7_default();
         let r = Ray::new(point(0.0, 0.0, 0.0), vector(0.0, 0.0, 1.0));
         w.objects[1].material.ambient = 1.0;
-        let i = Intersection::new(1.0, w.objects[1]);
+        let i = Intersection::new(1.0, &w.objects[1]);
         let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         let color = w.reflect_color(comps, MAX_REFLECTIONS);
         assert_eq!(color, Color::black())
@@ -269,7 +269,7 @@ mod tests {
         p.material.reflective = 0.5;
         w.objects.push(p);
 
-        let i = Intersection::new(SQRT_2, p);
+        let i = Intersection::new(SQRT_2, &p);
         let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         let color = w.reflect_color(comps, MAX_REFLECTIONS);
         assert_eq!(color, Color::new(0.19033, 0.237915, 0.142749))
@@ -286,7 +286,7 @@ mod tests {
         p.material.reflective = 0.5;
         w.objects.push(p);
 
-        let i = Intersection::new(SQRT_2, p);
+        let i = Intersection::new(SQRT_2, &p);
         let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         let color = w.shade_hit(comps, MAX_REFLECTIONS);
         assert_eq!(color, Color::new(0.87675, 0.92434, 0.82917))
@@ -321,7 +321,7 @@ mod tests {
         p.material.reflective = 0.5;
         w.objects.push(p);
 
-        let i = Intersection::new(SQRT_2, p);
+        let i = Intersection::new(SQRT_2, &p);
         let comps = i.prepare_computations(r, &Intersections::new(vec![i]));
         let color = w.reflect_color(comps, 0);
         assert_eq!(color, Color::black())
@@ -332,7 +332,7 @@ mod tests {
         let w = World::ch7_default();
         let s = w.objects[0];
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
-        let xs = Intersections::new(vec![Intersection::new(4.0, s), Intersection::new(6.0, s)]);
+        let xs = Intersections::new(vec![Intersection::new(4.0, &s), Intersection::new(6.0, &s)]);
         let comps = xs.data()[0].prepare_computations(r, &xs);
         let c = w.refracted_color(comps, 5);
         assert_eq!(c, Color::black());
@@ -343,8 +343,10 @@ mod tests {
         let mut w = World::ch7_default();
         let s = &mut w.objects[0];
         s.material = s.material.transparency(1.0).refractive_index(1.5);
+        let s = w.objects[0];
+
         let r = Ray::new(point(0.0, 0.0, -5.0), vector(0.0, 0.0, 1.0));
-        let xs = Intersections::new(vec![Intersection::new(4.0, *s), Intersection::new(6.0, *s)]);
+        let xs = Intersections::new(vec![Intersection::new(4.0, &s), Intersection::new(6.0, &s)]);
         let comps = xs.data()[0].prepare_computations(r, &xs);
         let c = w.refracted_color(comps, 0);
         assert_eq!(c, Color::black());
@@ -355,10 +357,11 @@ mod tests {
         let mut w = World::ch7_default();
         let s = &mut w.objects[0];
         s.material = s.material.transparency(1.0).refractive_index(1.5);
+        let s = w.objects[0];
         let r = Ray::new(point(0.0, 0.0, SQRT_2 / 2.0), vector(0.0, 1.0, 0.0));
         let xs = Intersections::new(vec![
-            Intersection::new(-SQRT_2 / 2.0, *s),
-            Intersection::new(SQRT_2 / 2.0, *s),
+            Intersection::new(-SQRT_2 / 2.0, &s),
+            Intersection::new(SQRT_2 / 2.0, &s),
         ]);
         let comps = xs.data()[1].prepare_computations(r, &xs);
         let c = w.refracted_color(comps, 5);
@@ -374,12 +377,13 @@ mod tests {
         let a = w.objects[0];
         let b = &mut w.objects[1];
         b.material = b.material.transparency(1.0).refractive_index(1.5);
+        let b = w.objects[1];
         let r = Ray::new(point(0.0, 0.0, 0.1), vector(0.0, 1.0, 0.0));
         let xs = Intersections::new(vec![
-            Intersection::new(-0.9899, a),
-            Intersection::new(-0.4899, *b),
-            Intersection::new(0.4899, *b),
-            Intersection::new(0.9899, a),
+            Intersection::new(-0.9899, &a),
+            Intersection::new(-0.4899, &b),
+            Intersection::new(0.4899, &b),
+            Intersection::new(0.9899, &a),
         ]);
         let comps = xs.data()[2].prepare_computations(r, &xs);
         let c = w.refracted_color(comps, 5);
@@ -406,7 +410,7 @@ mod tests {
             point(0.0, 0.0, -3.0),
             vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
         );
-        let xs = Intersections::new(vec![Intersection::new(f64::sqrt(2.0), floor)]);
+        let xs = Intersections::new(vec![Intersection::new(f64::sqrt(2.0), &floor)]);
         let comps = xs.data()[0].prepare_computations(r, &xs);
         let c = w.shade_hit(comps, 5);
         assert_eq!(c, Color::new(0.93642, 0.68642, 0.68642));
@@ -436,7 +440,7 @@ mod tests {
             point(0.0, 0.0, -3.0),
             vector(0.0, -f64::sqrt(2.0) / 2.0, f64::sqrt(2.0) / 2.0),
         );
-        let xs = Intersections::new(vec![Intersection::new(f64::sqrt(2.0), floor)]);
+        let xs = Intersections::new(vec![Intersection::new(f64::sqrt(2.0), &floor)]);
         let comps = xs.data()[0].prepare_computations(r, &xs);
         let c = w.shade_hit(comps, 5);
         assert_eq!(c, Color::new(0.93391, 0.69643, 0.69243));

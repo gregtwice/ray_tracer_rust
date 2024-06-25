@@ -52,19 +52,19 @@ mod tests {
     fn intersect_with_ray_from_above() {
         let p = Shape::plane();
         let r = Ray::new(point(0.0, 1.0, 0.0), vector(0.0, -1.0, 0.0));
-        let xs = p.intersects(r).data().clone();
+        let xs = p.intersects(r);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs[0].time, 1.0);
-        assert_eq!(xs[0].object, p);
+        assert_eq!(xs[0].object, &p);
     }
 
     #[test]
     fn intersect_with_ray_from_below() {
         let p = Shape::plane();
         let r = Ray::new(point(0.0, -1.0, 0.0), vector(0.0, 1.0, 0.0));
-        let xs = p.intersects(r).data().clone();
+        let xs = p.intersects(r);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs[0].time, 1.0);
-        assert_eq!(xs[0].object, p);
+        assert_eq!(xs[0].object, &p);
     }
 }
