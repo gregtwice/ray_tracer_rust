@@ -16,13 +16,6 @@ pub trait LocalIntersect: Debug + Sync {
     fn local_normal_at(&self, object_point: &Tuple) -> Tuple;
 }
 
-// #[derive(Debug, PartialEq, Clone, Copy)]
-// pub enum Object {
-//     Sphere(Sphere),
-//     Plane(Plane),
-//     No(TestShape),
-// }
-
 #[derive(Debug, Clone, Copy)]
 pub struct Shape<'world> {
     pub transform: Mat4,
