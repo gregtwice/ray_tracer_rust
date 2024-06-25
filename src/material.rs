@@ -33,7 +33,7 @@ impl Material {
     pub fn lighting(
         &self,
         light: Light,
-        shape: Shape,
+        shape: &Shape,
         point: Tuple,
         eyev: Tuple,
         normalv: Tuple,
@@ -119,7 +119,7 @@ mod test {
         let in_shadow = true;
         let result = Material::default().lighting(
             light,
-            Shape::sphere(),
+            &Shape::sphere(),
             position,
             eyev,
             normalv,
@@ -140,7 +140,7 @@ mod test {
         let light = Light::new(point(0.0, 0.0, -10.0), Color::white());
         let c1 = material.lighting(
             light,
-            Shape::sphere(),
+            &Shape::sphere(),
             point(0.9, 0.0, 0.0),
             eyev,
             normalv,
@@ -148,7 +148,7 @@ mod test {
         );
         let c2 = material.lighting(
             light,
-            Shape::sphere(),
+            &Shape::sphere(),
             point(1.1, 0.0, 0.0),
             eyev,
             normalv,

@@ -187,7 +187,7 @@ mod test {
                             y,
                             h.object.material.lighting(
                                 light,
-                                Shape::sphere(),
+                                &Shape::sphere(),
                                 p,
                                 eye,
                                 normal,

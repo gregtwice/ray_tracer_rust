@@ -42,7 +42,7 @@ impl<'world> World<'world> {
     pub fn shade_hit(&self, comps: Computations, depth: usize) -> Color {
         let surface = comps.i.object.material.lighting(
             self.lights[0],
-            *comps.i.object,
+            comps.i.object,
             comps.over_point,
             comps.eye_v,
             comps.normal_v,
@@ -96,10 +96,10 @@ impl<'world> World<'world> {
         if comps.i.object.material.transparency == 0.0 || depth == 0 {
             Color::black()
         } else {
-            // compute snell's law
             let (n1, n2) = comps.n;
+            // compute snell's law
             let n_ratio = n1 / n2;
-            let cos_i = comps.eye_v ^ comps.normal_v;
+            let cos_i = comps.eye_v.dot(comps.normal_v);
             let sin2_t = n_ratio * n_ratio * (1.0 - (cos_i * cos_i));
             if sin2_t > 1.0 {
                 Color::black()
@@ -415,6 +415,7 @@ mod tests {
         let c = w.shade_hit(comps, 5);
         assert_eq!(c, Color::new(0.93642, 0.68642, 0.68642));
     }
+
     #[test]
     fn shade_hit_with_reflective_transparent_material() {
         let mut w = World::ch7_default();

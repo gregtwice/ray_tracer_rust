@@ -67,7 +67,7 @@ impl Pattern {
         }
     }
 
-    pub fn pattern_at_shape(&self, shape: Shape, world_point: Tuple) -> Color {
+    pub fn pattern_at_shape(&self, shape: &Shape, world_point: Tuple) -> Color {
         let object_point = shape.transform_inverse * world_point;
         let pattern_point = self.transform.inverse() * object_point;
         self.color_at(pattern_point)
@@ -161,14 +161,14 @@ mod tests {
     fn stripes_with_an_object_transformation() {
         let s = Shape::sphere().with_transform(scaling(2.0, 2.0, 2.0));
         let pattern = Pattern::stripped(WHITE, BLACK);
-        assert_eq!(pattern.pattern_at_shape(s, point(1.5, 0.0, 0.0)), WHITE)
+        assert_eq!(pattern.pattern_at_shape(&s, point(1.5, 0.0, 0.0)), WHITE)
     }
 
     #[test]
     fn stripes_with_a_pattern_transformation() {
         let s = Shape::sphere();
         let pattern = Pattern::stripped(WHITE, BLACK).with_transform(scaling(2.0, 2.0, 2.0));
-        assert_eq!(pattern.pattern_at_shape(s, point(1.5, 0.0, 0.0)), WHITE)
+        assert_eq!(pattern.pattern_at_shape(&s, point(1.5, 0.0, 0.0)), WHITE)
     }
 
     #[test]
@@ -176,7 +176,7 @@ mod tests {
         let s = Shape::sphere().with_transform(scaling(2.0, 2.0, 2.0));
         let pattern = Pattern::stripped(WHITE, BLACK).with_transform(translation(0.5, 0.0, 0.0));
 
-        assert_eq!(pattern.pattern_at_shape(s, point(2.5, 0.0, 0.0)), WHITE)
+        assert_eq!(pattern.pattern_at_shape(&s, point(2.5, 0.0, 0.0)), WHITE)
     }
 
     #[test]
