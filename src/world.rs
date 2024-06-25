@@ -48,6 +48,7 @@ impl World {
             comps.normal_v,
             self.is_shadowed(comps.over_point),
         );
+
         let reflected = self.reflect_color(comps, depth);
         let refracted = self.refracted_color(comps, depth);
         let material = comps.i.object.material;
