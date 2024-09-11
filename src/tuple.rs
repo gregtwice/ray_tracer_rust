@@ -21,6 +21,10 @@ impl Tuple {
         Self { x, y, z, w }
     }
 
+    pub const fn as_array(&self) -> [f64; 4] {
+        [self.x, self.y, self.z, self.w]
+    }
+
     pub fn mag(&self) -> f64 {
         assert!(self.w == 0.0);
         f64::sqrt(self.x * self.x + self.y * self.y + self.z * self.z)

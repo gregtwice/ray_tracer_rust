@@ -197,13 +197,28 @@ impl<const N: usize> IndexMut<(usize, usize)> for Matrix<N> {
     }
 }
 
-impl<const N: usize> Mul<Matrix<N>> for Matrix<N> {
+impl Mat4 {
+    pub const fn row(&self, row: usize) -> [f64; 4] {
+        self.data[row]
+    }
+
+    pub const fn col(&self, col: usize) -> [f64; 4] {
+        [
+            self.data[0][col],
+            self.data[1][col],
+            self.data[2][col],
+            self.data[3][col],
+        ]
+    }
+}
+
+impl Mul<Matrix<4>> for Matrix<4> {
     type Output = Self;
 
-    fn mul(self, rhs: Matrix<N>) -> Self::Output {
+    fn mul(self, rhs: Matrix<4>) -> Self::Output {
         let mut m = Self::default();
-        for row in 0..N {
-            for col in 0..N {
+        for row in 0..4 {
+            for col in 0..4 {
                 m[(row, col)] = self[(row, 0)] * rhs[(0, col)]
                     + self[(row, 1)] * rhs[(1, col)]
                     + self[(row, 2)] * rhs[(2, col)]
