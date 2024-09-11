@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{
+    cube::Cube,
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,
     matrix::{Mat4, MatBase},
@@ -49,6 +50,15 @@ impl<'world> Shape<'world> {
             transform_inverse: Mat4::identity(),
             material: Material::default().refractive_index(1.5).transparency(1.0),
             object: &Sphere,
+        }
+    }
+
+    pub fn cube() -> Self {
+        Self {
+            transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
+            material: Material::default(),
+            object: &Cube,
         }
     }
 
