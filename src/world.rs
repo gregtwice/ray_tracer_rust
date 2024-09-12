@@ -10,12 +10,12 @@ use crate::{
     tuple::{point, Tuple},
 };
 
-pub struct World<'world> {
+pub struct World {
     lights: Vec<Light>,
-    pub objects: Vec<Shape<'world>>,
+    pub objects: Vec<Shape>,
 }
 
-impl<'world> World<'world> {
+impl World {
     pub fn new() -> Self {
         Self {
             lights: vec![],

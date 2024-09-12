@@ -1,17 +1,45 @@
 use std::fmt::Debug;
 
+use crate::shapes::{cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere};
 use crate::{
-    cube::Cube,
-    cylinder::Cylinder,
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,
     matrix::{Mat4, MatBase},
     pattern::Pattern,
-    plane::Plane,
     ray::Ray,
-    sphere::Sphere,
     tuple::{vector, Tuple},
 };
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum ShapeType {
+    Plane(Plane),
+    Cube(Cube),
+    Sphere(Sphere),
+    Cylinder(Cylinder),
+    TestShape(TestShape),
+}
+
+impl LocalIntersect for ShapeType {
+    fn local_intersect(&self, r: Ray) -> Vec<f64> {
+        match self {
+            ShapeType::Plane(p) => p.local_intersect(r),
+            ShapeType::Cube(c) => c.local_intersect(r),
+            ShapeType::Sphere(s) => s.local_intersect(r),
+            ShapeType::Cylinder(c) => c.local_intersect(r),
+            ShapeType::TestShape(t) => t.local_intersect(r),
+        }
+    }
+
+    fn local_normal_at(&self, object_point: &Tuple) -> Tuple {
+        match self {
+            ShapeType::Plane(p) => p.local_normal_at(object_point),
+            ShapeType::Cube(c) => c.local_normal_at(object_point),
+            ShapeType::Sphere(s) => s.local_normal_at(object_point),
+            ShapeType::Cylinder(c) => c.local_normal_at(object_point),
+            ShapeType::TestShape(t) => t.local_normal_at(object_point),
+        }
+    }
+}
 
 pub trait LocalIntersect: Debug + Sync {
     fn local_intersect(&self, r: Ray) -> Vec<f64>;
@@ -19,39 +47,41 @@ pub trait LocalIntersect: Debug + Sync {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Shape<'world> {
+pub struct Shape {
     pub transform: Mat4,
     pub transform_inverse: Mat4,
     pub material: Material,
-    pub object: &'world dyn LocalIntersect,
+    object: ShapeType,
+    // pub object: &'world dyn LocalIntersect,
 }
 
-impl<'world> PartialEq for Shape<'world> {
+impl PartialEq for Shape {
     fn eq(&self, other: &Self) -> bool {
         self.transform == other.transform
             && self.transform_inverse == other.transform_inverse
             && self.material == other.material
-            && std::ptr::eq(self.object, other.object)
+            && self.object == other.object
     }
 }
 
-impl<'world> Shape<'world> {
+impl Shape {
     pub fn sphere() -> Self {
         Self {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: &Sphere,
+            object: ShapeType::Sphere(Sphere),
         }
     }
 
     pub fn cylinder() -> Self {
         let c = Cylinder::default();
+
         Self {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: &c,
+            object: ShapeType::Cylinder(c),
         }
     }
 
@@ -60,7 +90,7 @@ impl<'world> Shape<'world> {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default().refractive_index(1.5).transparency(1.0),
-            object: &Sphere,
+            object: ShapeType::Sphere(Sphere),
         }
     }
 
@@ -69,7 +99,7 @@ impl<'world> Shape<'world> {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: &Cube,
+            object: ShapeType::Cube(Cube),
         }
     }
 
@@ -78,7 +108,7 @@ impl<'world> Shape<'world> {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: &Plane,
+            object: ShapeType::Plane(Plane),
         }
     }
 
@@ -87,7 +117,7 @@ impl<'world> Shape<'world> {
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
-            object: &TestShape,
+            object: ShapeType::TestShape(TestShape),
         }
     }
 
@@ -121,7 +151,7 @@ impl<'world> Shape<'world> {
     }
 }
 
-impl<'world> Intersectable for Shape<'world> {
+impl Intersectable for Shape {
     fn intersects(&self, r: crate::ray::Ray) -> Intersections {
         let r = r.transform(self.transform_inverse);
         let xs = self.object.local_intersect(r);

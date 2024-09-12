@@ -1,17 +1,17 @@
 pub mod camera;
 pub mod canvas;
 pub mod color;
-pub mod cube;
-pub mod cylinder;
+
 pub mod intersection;
 pub mod lights;
 pub mod material;
 pub mod matrix;
 pub mod object;
 pub mod pattern;
-pub mod plane;
+
 pub mod ray;
-pub mod sphere;
+pub mod shapes;
+
 pub mod transformations;
 pub mod tuple;
 pub mod util;

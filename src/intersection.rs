@@ -84,7 +84,7 @@ pub trait Intersectable: PartialEq + Sized {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Intersection<'world> {
     pub time: f64,
-    pub object: &'world Shape<'world>,
+    pub object: &'world Shape,
 }
 
 impl<'world> Intersection<'world> {
