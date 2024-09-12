@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     cube::Cube,
+    cylinder::Cylinder,
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,
     matrix::{Mat4, MatBase},
@@ -41,6 +42,16 @@ impl<'world> Shape<'world> {
             transform_inverse: Mat4::identity(),
             material: Material::default(),
             object: &Sphere,
+        }
+    }
+
+    pub fn cylinder() -> Self {
+        let c = Cylinder::default();
+        Self {
+            transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
+            material: Material::default(),
+            object: &c,
         }
     }
 
