@@ -44,27 +44,27 @@ pub struct CylinderBuilder {
     cylinder: Cylinder,
 }
 impl CylinderBuilder {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             cylinder: Cylinder::default(),
         }
     }
 
-    fn min(mut self, min: f64) -> Self {
+    pub fn min(mut self, min: f64) -> Self {
         self.cylinder.min = min;
         self
     }
 
-    fn max(mut self, max: f64) -> Self {
+    pub fn max(mut self, max: f64) -> Self {
         self.cylinder.max = max;
         self
     }
-    fn closed(mut self, closed: bool) -> Self {
+    pub fn closed(mut self, closed: bool) -> Self {
         self.cylinder.closed = closed;
         self
     }
 
-    fn build(self) -> Cylinder {
+    pub fn build(self) -> Cylinder {
         self.cylinder
     }
 }

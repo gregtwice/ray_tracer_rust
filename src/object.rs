@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use crate::shapes::cylinder::CylinderBuilder;
 use crate::shapes::{cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere};
 use crate::{
     intersection::{Intersectable, Intersection, Intersections},
@@ -74,8 +75,12 @@ impl Shape {
         }
     }
 
-    pub fn cylinder() -> Self {
-        let c = Cylinder::default();
+    pub fn cylinder(min: f64, max: f64, closed: bool) -> Self {
+        let c = CylinderBuilder::new()
+            .closed(closed)
+            .max(max)
+            .min(min)
+            .build();
 
         Self {
             transform: Mat4::identity(),
