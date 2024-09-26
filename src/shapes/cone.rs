@@ -7,7 +7,7 @@ use crate::{
     util::{flt_eq, EPSILON},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Cone {
     min: f64,
     max: f64,
@@ -29,24 +29,24 @@ pub struct ConeBuilder {
 }
 
 impl ConeBuilder {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             cone: Cone::default(),
         }
     }
-    fn closed(mut self, closed: bool) -> Self {
+    pub fn closed(mut self, closed: bool) -> Self {
         self.cone.closed = closed;
         self
     }
-    fn min(mut self, min: f64) -> Self {
+    pub fn min(mut self, min: f64) -> Self {
         self.cone.min = min;
         self
     }
-    fn max(mut self, max: f64) -> Self {
+    pub fn max(mut self, max: f64) -> Self {
         self.cone.max = max;
         self
     }
-    fn build(self) -> Cone {
+    pub fn build(self) -> Cone {
         self.cone
     }
 }

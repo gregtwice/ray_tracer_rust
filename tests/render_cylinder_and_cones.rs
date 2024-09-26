@@ -11,7 +11,7 @@ use ray_tracer::{
 #[test]
 fn can_render_all_shapes() {
     let mut world = World::ch7_default();
-    let cyl = Shape::cylinder(-1., 1., true).with_transform(rot_y(PI / 4.).rot_x(PI / 4.));
+    let cyl = Shape::cone(-1., 0., true).with_transform(rot_y(PI / 4.));
     world.objects.clear();
     world.objects.push(cyl);
     let mut camera = Camera::new(500, 250, PI / 3.0);

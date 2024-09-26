@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use crate::shapes::cone::{Cone, ConeBuilder};
 use crate::shapes::cylinder::CylinderBuilder;
 use crate::shapes::{cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere};
 use crate::{
@@ -15,6 +16,7 @@ use crate::{
 enum ShapeType {
     Plane(Plane),
     Cube(Cube),
+    Cone(Cone),
     Sphere(Sphere),
     Cylinder(Cylinder),
     TestShape(TestShape),
@@ -28,6 +30,7 @@ impl LocalIntersect for ShapeType {
             ShapeType::Sphere(s) => s.local_intersect(r),
             ShapeType::Cylinder(c) => c.local_intersect(r),
             ShapeType::TestShape(t) => t.local_intersect(r),
+            ShapeType::Cone(c) => c.local_intersect(r),
         }
     }
 
@@ -38,6 +41,7 @@ impl LocalIntersect for ShapeType {
             ShapeType::Sphere(s) => s.local_normal_at(object_point),
             ShapeType::Cylinder(c) => c.local_normal_at(object_point),
             ShapeType::TestShape(t) => t.local_normal_at(object_point),
+            ShapeType::Cone(c) => c.local_normal_at(object_point),
         }
     }
 }
@@ -54,6 +58,16 @@ pub struct Shape {
     pub material: Material,
     object: ShapeType,
     // pub object: &'world dyn LocalIntersect,
+}
+impl Default for Shape {
+    fn default() -> Self {
+        Self {
+            transform: Mat4::identity(),
+            transform_inverse: Mat4::identity(),
+            material: Material::default(),
+            object: ShapeType::Sphere(Sphere),
+        }
+    }
 }
 
 impl PartialEq for Shape {
@@ -83,10 +97,16 @@ impl Shape {
             .build();
 
         Self {
-            transform: Mat4::identity(),
-            transform_inverse: Mat4::identity(),
-            material: Material::default(),
             object: ShapeType::Cylinder(c),
+            ..Default::default()
+        }
+    }
+
+    pub fn cone(min: f64, max: f64, closed: bool) -> Self {
+        let c = ConeBuilder::new().max(max).min(min).closed(closed).build();
+        Self {
+            object: ShapeType::Cone(c),
+            ..Default::default()
         }
     }
 
