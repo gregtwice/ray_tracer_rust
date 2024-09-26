@@ -58,9 +58,17 @@ pub struct Shape {
     pub transform_inverse: Mat4,
     pub material: Material,
     object: ShapeType,
-    parent: Group,
-    // pub object: &'world dyn LocalIntersect,
+    pub parent: Group,
 }
+
+impl PartialEq for Shape {
+    fn eq(&self, other: &Self) -> bool {
+        self.object == other.object
+            && self.transform == other.transform
+            && self.material == other.material
+    }
+}
+
 impl Default for Shape {
     fn default() -> Self {
         Self {
@@ -70,15 +78,6 @@ impl Default for Shape {
             material: Material::default(),
             object: ShapeType::Sphere(Sphere),
         }
-    }
-}
-
-impl PartialEq for Shape {
-    fn eq(&self, other: &Self) -> bool {
-        self.transform == other.transform
-            && self.transform_inverse == other.transform_inverse
-            && self.material == other.material
-            && self.object == other.object
     }
 }
 
@@ -168,6 +167,26 @@ impl Shape {
     pub fn set_pattern(&mut self, pattern: Pattern) {
         self.material.pattern = Some(pattern)
     }
+
+    pub fn world_to_object(&self, point: Tuple) -> Tuple {
+        let parent = self.parent;
+        let point = if !parent.is_null() {
+            parent.world_to_object(point)
+        } else {
+            point
+        };
+        self.transform_inverse * point
+    }
+    pub fn normal_to_world(&self, normal: Tuple) -> Tuple {
+        let inverse = self.transform_inverse.transpose();
+        let normal = ((inverse * normal).into_vector()).norm();
+        let parent = self.parent;
+        if !parent.is_null() {
+            parent.normal_to_world(normal)
+        } else {
+            normal
+        }
+    }
 }
 
 impl Intersectable for Shape {
@@ -175,16 +194,13 @@ impl Intersectable for Shape {
         let r = r.transform(self.transform_inverse);
         let xs = self.object.local_intersect(r);
 
-        Intersections::new(xs.iter().map(|t| Intersection::new(*t, self)).collect())
+        Intersections::new(xs.iter().map(|t| Intersection::new(*t, *self)).collect())
     }
 
     fn normal_at(&self, point: &Tuple) -> Tuple {
-        let local_point = (self.transform_inverse) * (*point);
+        let local_point = self.world_to_object(*point);
         let local_normal = self.object.local_normal_at(&local_point);
-
-        let mut world_normal = Mat4::transpose(self.transform_inverse) * local_normal;
-        world_normal.w = 0.0;
-        world_normal.norm()
+        self.normal_to_world(local_normal)
     }
 }
 

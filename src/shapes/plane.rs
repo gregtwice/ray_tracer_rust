@@ -55,7 +55,7 @@ mod tests {
         let xs = p.intersects(r);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs[0].time, 1.0);
-        assert_eq!(xs[0].object, &p);
+        assert_eq!(xs[0].object, p);
     }
 
     #[test]
@@ -65,6 +65,6 @@ mod tests {
         let xs = p.intersects(r);
         assert_eq!(xs.len(), 1);
         assert_eq!(xs[0].time, 1.0);
-        assert_eq!(xs[0].object, &p);
+        assert_eq!(xs[0].object, p);
     }
 }

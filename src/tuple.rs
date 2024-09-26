@@ -25,6 +25,10 @@ impl Tuple {
         [self.x, self.y, self.z, self.w]
     }
 
+    pub fn into_vector(&self) -> Self {
+        vector(self.x, self.y, self.z)
+    }
+
     pub fn mag(&self) -> f64 {
         assert!(self.w == 0.0);
         f64::sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
