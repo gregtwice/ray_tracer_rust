@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use ray_tracer::{
     camera::Camera,
     object::Shape,
-    transformations::{rot_y, scaling, view_transform},
+    transformations::{rot_y, view_transform},
     tuple::{point, vector},
     world::World,
 };

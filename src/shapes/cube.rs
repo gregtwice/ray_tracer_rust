@@ -1,7 +1,6 @@
 use std::f64::INFINITY;
 
 use crate::{
-    intersection::Intersection,
     object::LocalIntersect,
     ray::Ray,
     tuple::{vector, Tuple},
@@ -67,99 +66,46 @@ mod tests {
     };
 
     use super::*;
+    use test_case::test_case;
 
-    #[test]
-    fn ray_intersects_cube() {
-        struct Case {
-            name: &'static str,
-            origin: Tuple,
-            direction: Tuple,
-            t1: f64,
-            t2: f64,
-        }
-        impl Case {
-            fn new(name: &'static str, origin: Tuple, direction: Tuple, t1: f64, t2: f64) -> Self {
-                Self {
-                    name,
-                    origin,
-                    direction,
-                    t1,
-                    t2,
-                }
-            }
-        }
+    #[test_case(point(5.0, 0.5, 0.0), vector(-1.0, 0.0, 0.0), 4.0, 6.0; "positive x")]
+    #[test_case(point(-5.0, 0.5, 0.0), vector(1.0, 0.0, 0.0), 4.0, 6.0 ; "negative x")]
+    #[test_case(point(0.5, 5.0, 0.0), vector(0.0, -1.0, 0.0), 4.0, 6.0 ; "positive y")]
+    #[test_case(point(0.5, -5.0, 0.0), vector(0.0, 1.0, 0.0), 4.0, 6.0 ; "negative y")]
+    #[test_case(point(0.5, 0.0, 5.0), vector(0.0, 0.0, -1.0), 4.0, 6.0 ; "positive z")]
+    #[test_case(point(0.5, 0.0, -5.0), vector(0.0, 0.0, 1.0), 4.0, 6.0 ; "negative z")]
+    #[test_case(point(0.0, 0.5, 0.0), vector(0.0, 0.0, 1.0), -1.0, 1.0 ; "inside")]
+    fn ray_intersects_cube(origin: Tuple, direction: Tuple, t1: f64, t2: f64) {
         let c = Cube;
-        let cases = [
-            Case::new("+x", point(5.0, 0.5, 0.0), vector(-1.0, 0.0, 0.0), 4.0, 6.0),
-            Case::new("-x", point(-5.0, 0.5, 0.0), vector(1.0, 0.0, 0.0), 4.0, 6.0),
-            Case::new("+y", point(0.5, 5.0, 0.0), vector(0.0, -1.0, 0.0), 4.0, 6.0),
-            Case::new("-y", point(0.5, -5.0, 0.0), vector(0.0, 1.0, 0.0), 4.0, 6.0),
-            Case::new("+z", point(0.5, 0.0, 5.0), vector(0.0, 0.0, -1.0), 4.0, 6.0),
-            Case::new("-z", point(0.5, 0.0, -5.0), vector(0.0, 0.0, 1.0), 4.0, 6.0),
-            Case::new("in", point(0.0, 0.5, 0.0), vector(0.0, 0.0, 1.0), -1.0, 1.0),
-        ];
 
-        for case in cases {
-            let r = Ray::new(case.origin, case.direction);
-            let xs = c.local_intersect(r);
-            assert_eq!(xs.len(), 2, "error with cube case {}", case.name);
-            assert_eq!(xs[0], case.t1);
-            assert_eq!(xs[1], case.t2);
-        }
-    }
-    #[test]
-    fn ray_misses_cube() {
-        let c = Cube;
-        struct Case {
-            o: Tuple,
-            d: Tuple,
-        }
-        impl Case {
-            fn new(o: Tuple, d: Tuple) -> Self {
-                Self { o, d }
-            }
-        }
-        let cases = [
-            Case::new(point(2.0, 0.0, 0.0), vector(0.2673, 0.5345, 0.8018)),
-            Case::new(point(0.0, 2.0, 0.0), vector(0.8018, 0.2673, 0.5345)),
-            Case::new(point(0.0, 0.0, -2.0), vector(0.5345, 0.8018, 0.2673)),
-            Case::new(point(2.0, 0.0, 2.0), vector(0.0, 0.0, -1.0)),
-            Case::new(point(0.0, 2.0, 2.0), vector(0.0, -1.0, 0.0)),
-            Case::new(point(2.0, 2.0, 0.0), vector(-1.0, 0.0, 0.0)),
-        ];
-
-        for case in cases {
-            assert_eq!(c.local_intersect(Ray::new(case.o, case.d)).len(), 0)
-        }
+        let r = Ray::new(origin, direction);
+        let xs = c.local_intersect(r);
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0], t1);
+        assert_eq!(xs[1], t2);
     }
 
-    #[test]
-    fn normal_surface_cube() {
-        struct Case {
-            point: Tuple,
-            expect: Tuple,
-        }
-        impl Case {
-            fn new(o: Tuple, d: Tuple) -> Self {
-                Self {
-                    point: o,
-                    expect: d,
-                }
-            }
-        }
-        let cases = [
-            Case::new(point(1.0, 0.5, -0.8), vector(1.0, 0.0, 0.0)),
-            Case::new(point(-1.0, -0.2, 0.9), vector(-1.0, 0.0, 0.0)),
-            Case::new(point(-0.4, 1.0, -0.1), vector(0.0, 1.0, 0.0)),
-            Case::new(point(0.3, -1.0, -0.7), vector(0.0, -1.0, 0.0)),
-            Case::new(point(-0.6, 0.3, 1.0), vector(0.0, 0.0, 1.0)),
-            Case::new(point(0.4, 0.4, -1.0), vector(0.0, 0.0, -1.0)),
-            Case::new(point(1.0, 1.0, 1.0), vector(1.0, 0.0, 0.0)),
-            Case::new(point(-1.0, -1.0, -1.0), vector(-1.0, 0.0, 0.0)),
-        ];
+    #[test_case(point(2.0, 0.0, 0.0), vector(0.2673, 0.5345, 0.8018))]
+    #[test_case(point(0.0, 2.0, 0.0), vector(0.8018, 0.2673, 0.5345))]
+    #[test_case(point(0.0, 0.0, -2.0), vector(0.5345, 0.8018, 0.2673))]
+    #[test_case(point(2.0, 0.0, 2.0), vector(0.0, 0.0, -1.0))]
+    #[test_case(point(0.0, 2.0, 2.0), vector(0.0, -1.0, 0.0))]
+    #[test_case(point(2.0, 2.0, 0.0), vector(-1.0, 0.0, 0.0))]
+    fn ray_misses_cube(origin: Tuple, dest: Tuple) {
         let c = Cube;
-        for case in cases {
-            assert_eq!(c.local_normal_at(&case.point), case.expect)
-        }
+        assert_eq!(c.local_intersect(Ray::new(origin, dest)).len(), 0)
+    }
+
+    #[test_case(point(1.0, 0.5, -0.8), vector(1.0, 0.0, 0.0) ; "normal")]
+    #[test_case(point(-1.0, -0.2, 0.9), vector(-1.0, 0.0, 0.0))]
+    #[test_case(point(-0.4, 1.0, -0.1), vector(0.0, 1.0, 0.0))]
+    #[test_case(point(0.3, -1.0, -0.7), vector(0.0, -1.0, 0.0))]
+    #[test_case(point(-0.6, 0.3, 1.0), vector(0.0, 0.0, 1.0))]
+    #[test_case(point(0.4, 0.4, -1.0), vector(0.0, 0.0, -1.0))]
+    #[test_case(point(1.0, 1.0, 1.0), vector(1.0, 0.0, 0.0); "px")]
+    #[test_case(point(-1.0, -1.0, -1.0), vector(-1.0, 0.0, 0.0); "nx")]
+    fn normal_surface_cube(point: Tuple, normal: Tuple) {
+        let c = Cube;
+        assert_eq!(c.local_normal_at(&point), normal)
     }
 }

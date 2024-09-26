@@ -1,8 +1,9 @@
 use std::fmt::Debug;
 
-use crate::shapes::cone::{Cone, ConeBuilder};
-use crate::shapes::cylinder::CylinderBuilder;
-use crate::shapes::{cube::Cube, cylinder::Cylinder, plane::Plane, sphere::Sphere};
+use slotmap::Key;
+
+use crate::shapes::prelude::*;
+
 use crate::{
     intersection::{Intersectable, Intersection, Intersections},
     material::Material,
@@ -57,11 +58,13 @@ pub struct Shape {
     pub transform_inverse: Mat4,
     pub material: Material,
     object: ShapeType,
+    parent: Group,
     // pub object: &'world dyn LocalIntersect,
 }
 impl Default for Shape {
     fn default() -> Self {
         Self {
+            parent: Group::null(),
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
             material: Material::default(),
@@ -82,10 +85,8 @@ impl PartialEq for Shape {
 impl Shape {
     pub fn sphere() -> Self {
         Self {
-            transform: Mat4::identity(),
-            transform_inverse: Mat4::identity(),
-            material: Material::default(),
             object: ShapeType::Sphere(Sphere),
+            ..Default::default()
         }
     }
 
@@ -112,37 +113,30 @@ impl Shape {
 
     pub fn glass_sphere() -> Self {
         Self {
-            transform: Mat4::identity(),
-            transform_inverse: Mat4::identity(),
-            material: Material::default().refractive_index(1.5).transparency(1.0),
             object: ShapeType::Sphere(Sphere),
+            material: Material::default().refractive_index(1.5).transparency(1.0),
+            ..Default::default()
         }
     }
 
     pub fn cube() -> Self {
         Self {
-            transform: Mat4::identity(),
-            transform_inverse: Mat4::identity(),
-            material: Material::default(),
             object: ShapeType::Cube(Cube),
+            ..Default::default()
         }
     }
 
     pub fn plane() -> Self {
         Self {
-            transform: Mat4::identity(),
-            transform_inverse: Mat4::identity(),
-            material: Material::default(),
             object: ShapeType::Plane(Plane),
+            ..Default::default()
         }
     }
 
     pub fn default_shape() -> Self {
         Self {
-            transform: Mat4::identity(),
-            transform_inverse: Mat4::identity(),
-            material: Material::default(),
             object: ShapeType::TestShape(TestShape),
+            ..Default::default()
         }
     }
 

@@ -1,11 +1,6 @@
 use core::f64;
 
-use crate::{
-    object::LocalIntersect,
-    ray::Ray,
-    tuple::vector,
-    util::{flt_eq, EPSILON},
-};
+use crate::{object::LocalIntersect, ray::Ray, tuple::vector, util::EPSILON};
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Cone {
@@ -133,28 +128,26 @@ impl LocalIntersect for Cone {
 
 #[cfg(test)]
 mod tests {
+    use test_case::test_case;
+
     use crate::{
         ray::Ray,
-        tuple::{point, vector},
+        tuple::{point, vector, Tuple},
+        util::flt_eq,
     };
 
     use super::*;
 
-    #[test]
-    fn intersect_cone_() {
-        let cases = vec![
-            (point(0., 0., -5.), vector(0., 0., 1.), 5., 5.),
-            (point(0., 0., -5.), vector(1., 1., 1.), 8.66025, 8.66025),
-            (point(1., 1., -5.), vector(-0.5, -1., 1.), 4.55006, 49.44994),
-        ];
-        for case in cases {
-            let c = Cone::default();
-            let r = Ray::new(case.0, case.1.norm());
-            let xs = c.local_intersect(r);
-            assert_eq!(xs.len(), 2);
-            assert!(flt_eq(xs[0], case.2));
-            assert!(flt_eq(xs[1], case.3));
-        }
+    #[test_case(point(0., 0., -5.), vector(0., 0., 1.), 5., 5.)]
+    #[test_case(point(0., 0., -5.), vector(1., 1., 1.), 8.66025, 8.66025)]
+    #[test_case(point(1., 1., -5.), vector(-0.5, -1., 1.), 4.55006, 49.44994)]
+    fn intersect_cone_(ray_o: Tuple, ray_d: Tuple, i_p1: f64, i_p2: f64) {
+        let c = Cone::default();
+        let r = Ray::new(ray_o, ray_d.norm());
+        let xs = c.local_intersect(r);
+        assert_eq!(xs.len(), 2);
+        assert!(flt_eq(xs[0], i_p1));
+        assert!(flt_eq(xs[1], i_p2));
     }
     #[test]
     fn cone_ray_parallel() {
@@ -165,31 +158,22 @@ mod tests {
         assert!(flt_eq(xs[0], 0.35355))
     }
 
-    #[test]
-    fn intersect_cone_end_caps() {
-        let cases = vec![
-            (point(0., 0., -5.), vector(0., 1., 0.), 0),
-            (point(0., 0., -0.25), vector(0., 1., 1.), 2),
-            (point(0., 0., -0.25), vector(0., 1., 0.), 4),
-        ];
-        for case in cases {
-            let r = Ray::new(case.0, case.1.norm());
-            let c = ConeBuilder::new().min(-0.5).max(0.5).closed(true).build();
-            let xs = c.local_intersect(r);
-            assert_eq!(xs.len(), case.2);
-        }
+    #[test_case(point(0., 0., -5.), vector(0., 1., 0.), 0)]
+    #[test_case(point(0., 0., -0.25), vector(0., 1., 1.), 2)]
+    #[test_case(point(0., 0., -0.25), vector(0., 1., 0.), 4)]
+    fn intersect_cone_end_caps(ray_o: Tuple, ray_d: Tuple, len: usize) {
+        let r = Ray::new(ray_o, ray_d.norm());
+        let c = ConeBuilder::new().min(-0.5).max(0.5).closed(true).build();
+        let xs = c.local_intersect(r);
+        assert_eq!(xs.len(), len);
     }
-    #[test]
-    fn normal_cone() {
-        let cases = [
-            (point(0., 0., 0.), vector(0., 0., 0.)),
-            (point(1., 1., 1.), vector(1., -f64::sqrt(2.), 1.)),
-            (point(-1., -1., 0.), vector(-1., 1., 0.)),
-        ];
-        for case in cases {
-            let c = Cone::default();
-            let n = c.local_normal_at(&case.0);
-            assert_eq!(n, case.1);
-        }
+
+    #[test_case(point(0., 0., 0.), vector(0., 0., 0.))]
+    #[test_case(point(1., 1., 1.), vector(1., -f64::sqrt(2.), 1.))]
+    #[test_case(point(-1., -1., 0.), vector(-1., 1., 0.))]
+    fn normal_cone(point: Tuple, normal: Tuple) {
+        let c = Cone::default();
+        let n = c.local_normal_at(&point);
+        assert_eq!(n, normal);
     }
 }

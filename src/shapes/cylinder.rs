@@ -1,7 +1,5 @@
 use core::f64;
 
-use rayon::vec;
-
 use crate::{
     object::LocalIntersect,
     ray::Ray,

@@ -28,9 +28,9 @@ impl Camera {
             hsize,
             vsize,
             fov,
+            pixel_size,
             transform: Mat4::identity(),
             transform_inverse: Mat4::identity(),
-            pixel_size: pixel_size,
             half_height,
             half_width,
         }

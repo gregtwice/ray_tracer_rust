@@ -47,7 +47,7 @@ impl<'world> Computations<'world> {
 }
 
 impl<'world> Intersections<'world> {
-    pub fn new(i: Vec<Intersection<'world>>) -> Intersections {
+    pub fn new(i: Vec<Intersection<'world>>) -> Intersections<'world> {
         Self(i)
     }
 
@@ -65,6 +65,11 @@ impl<'world> Intersections<'world> {
 
     pub fn into_inner(self) -> Vec<Intersection<'world>> {
         self.0
+    }
+
+    pub fn extend(&mut self, slice: Intersections<'world>) {
+        self.0.extend_from_slice(&slice.into_inner());
+        self.0.sort_by(|a, b| a.time.total_cmp(&b.time));
     }
 
     pub fn hit(&self) -> Option<&Intersection> {
@@ -349,7 +354,6 @@ mod tests {
 
     #[test]
     fn schlick_with_a_perpendicular_viewing_angle() {
-        let s = Shape::glass_sphere();
         let r = Ray::new(point(0.0, 0.0, 0.0), vector(0.0, 1.0, 0.0));
         let s = Shape::glass_sphere();
 
