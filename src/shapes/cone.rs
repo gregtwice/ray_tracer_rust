@@ -1,12 +1,24 @@
 use core::f64;
 
-use crate::{object::LocalIntersect, ray::Ray, tuple::vector, util::EPSILON};
+use crate::{
+    bounds::{Bounded, BoundingBox},
+    object::LocalIntersect,
+    ray::Ray,
+    tuple::{point, vector},
+    util::EPSILON,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Cone {
     min: f64,
     max: f64,
     closed: bool,
+}
+
+impl Bounded for Cone {
+    fn bounds(&self) -> BoundingBox {
+        BoundingBox::new(point(-1.0, -1.0, -1.0), point(1.0, 1.0, 1.0))
+    }
 }
 
 impl Default for Cone {

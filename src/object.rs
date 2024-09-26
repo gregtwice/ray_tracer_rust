@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use slotmap::Key;
 
+use crate::bounds::{Bounded, BoundingBox};
 use crate::shapes::prelude::*;
 
 use crate::{
@@ -21,6 +22,18 @@ enum ShapeType {
     Sphere(Sphere),
     Cylinder(Cylinder),
     TestShape(TestShape),
+}
+impl Bounded for ShapeType {
+    fn bounds(&self) -> BoundingBox {
+        match self {
+            ShapeType::Plane(p) => p.bounds(),
+            ShapeType::Cube(c) => c.bounds(),
+            ShapeType::Sphere(s) => s.bounds(),
+            ShapeType::Cylinder(c) => c.bounds(),
+            ShapeType::TestShape(_) => unimplemented!(),
+            ShapeType::Cone(c) => c.bounds(),
+        }
+    }
 }
 
 impl LocalIntersect for ShapeType {
@@ -59,6 +72,12 @@ pub struct Shape {
     pub material: Material,
     object: ShapeType,
     pub parent: Group,
+}
+
+impl Bounded for Shape {
+    fn bounds(&self) -> BoundingBox {
+        self.object.bounds()
+    }
 }
 
 impl PartialEq for Shape {

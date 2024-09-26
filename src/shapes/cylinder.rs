@@ -1,9 +1,10 @@
 use core::f64;
 
 use crate::{
+    bounds::{Bounded, BoundingBox},
     object::LocalIntersect,
     ray::Ray,
-    tuple::vector,
+    tuple::{point, vector},
     util::{flt_eq, EPSILON},
 };
 
@@ -12,6 +13,12 @@ pub struct Cylinder {
     min: f64,
     max: f64,
     closed: bool,
+}
+
+impl Bounded for Cylinder {
+    fn bounds(&self) -> BoundingBox {
+        BoundingBox::new(point(-1.0, self.min, -1.0), point(1.0, self.max, 1.0))
+    }
 }
 
 impl Cylinder {

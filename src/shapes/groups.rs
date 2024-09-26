@@ -1,3 +1,5 @@
+use crate::bounds::Bounded;
+use crate::bounds::BoundingBox;
 use crate::intersection::Intersectable;
 use crate::intersection::Intersections;
 use crate::matrix::Mat4;
@@ -25,6 +27,7 @@ struct GroupData {
     shapes: Vec<Shape>,
     children: Vec<Group>,
     parent: Group,
+    bounds: Option<BoundingBox>,
 }
 
 impl Intersectable for Group {
@@ -107,6 +110,7 @@ impl Group {
             children: vec![],
             parent: Group::null(),
             shapes: vec![],
+            bounds: None,
         };
 
         let handle = ALL_GROUPS.write().insert(group);
@@ -146,11 +150,38 @@ impl Group {
             normal
         }
     }
+
+    pub fn make_bounds(&self, group: &GroupData) -> BoundingBox {
+        let mut bb = BoundingBox::default();
+        for shape in &group.shapes {
+            bb.add_box(shape.bounds())
+        }
+        for child in &group.children {
+            if group.parent.is_null() {
+                bb = bb.transform(group.transform);
+            }
+            bb.add_box(child.bounds());
+        }
+
+        bb
+    }
 }
 
 impl From<Shape> for Group {
     fn from(value: Shape) -> Self {
         Group::new().with_transform(value.transform)
+    }
+}
+
+impl Bounded for Group {
+    fn bounds(&self) -> crate::bounds::BoundingBox {
+        let groups = ALL_GROUPS.read_recursive();
+        let group = groups.get(*self).unwrap();
+        if let Some(bb) = group.bounds {
+            bb
+        } else {
+            self.make_bounds(group)
+        }
     }
 }
 

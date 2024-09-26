@@ -1,4 +1,5 @@
 use crate::{
+    bounds::{Bounded, BoundingBox},
     object::LocalIntersect,
     ray::Ray,
     tuple::{point, Tuple},
@@ -6,6 +7,12 @@ use crate::{
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Sphere;
+
+impl Bounded for Sphere {
+    fn bounds(&self) -> BoundingBox {
+        BoundingBox::new(point(-1.0, -1.0, -1.0), point(1.0, 1.0, 1.0))
+    }
+}
 
 impl LocalIntersect for Sphere {
     fn local_intersect(&self, r: Ray) -> Vec<f64> {

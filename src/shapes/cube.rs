@@ -1,14 +1,21 @@
 use std::f64::INFINITY;
 
 use crate::{
+    bounds::{Bounded, BoundingBox},
     object::LocalIntersect,
     ray::Ray,
-    tuple::{vector, Tuple},
+    tuple::{point, vector, Tuple},
     util::{max3, EPSILON},
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Cube;
+
+impl Bounded for Cube {
+    fn bounds(&self) -> BoundingBox {
+        BoundingBox::new(point(-1.0, -1.0, -1.0), point(1.0, 1.0, 1.0))
+    }
+}
 
 fn check_axis(origin: f64, direction: f64) -> (f64, f64) {
     let tmin_numerator = -1.0 - origin;

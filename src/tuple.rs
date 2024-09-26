@@ -59,6 +59,19 @@ impl Tuple {
             self.x * rhs.y - self.y * rhs.x,
         )
     }
+
+    pub fn with_x(mut self, c: f64) -> Self {
+        self.x = c;
+        self
+    }
+    pub fn with_y(mut self, c: f64) -> Self {
+        self.y = c;
+        self
+    }
+    pub fn with_z(mut self, c: f64) -> Self {
+        self.z = c;
+        self
+    }
 }
 
 impl PartialEq for Tuple {

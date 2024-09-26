@@ -1,7 +1,23 @@
-use crate::{object::LocalIntersect, tuple::vector, util::EPSILON};
+use core::f64;
+
+use crate::{
+    bounds::{Bounded, BoundingBox},
+    object::LocalIntersect,
+    tuple::{point, vector},
+    util::EPSILON,
+};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Plane;
+
+impl Bounded for Plane {
+    fn bounds(&self) -> BoundingBox {
+        BoundingBox::new(
+            point(f64::NEG_INFINITY, 0.0, f64::NEG_INFINITY),
+            point(f64::INFINITY, 0.0, f64::INFINITY),
+        )
+    }
+}
 
 impl LocalIntersect for Plane {
     fn local_intersect(&self, r: crate::ray::Ray) -> Vec<f64> {
